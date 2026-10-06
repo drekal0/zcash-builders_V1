@@ -1,82 +1,74 @@
-export type Role = 'student' | 'admin' | 'admin+student' | 'mentor'
-
-export type CohortStatus = 'open' | 'active' | 'completed'
-
-export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'waitlisted'
-
-export type LabStatus = 'submitted' | 'under_review' | 'approved' | 'revision_requested'
-
-export type LessonType = 'reading' | 'video' | 'interactive' | 'lab'
+export type Role = 'student' | 'admin' | 'mentor'
 
 export interface Profile {
   id: string
-  name: string | null
-  username: string | null
-  bio: string | null
-  country: string | null
-  website: string | null
-  github: string | null
-  x_handle: string | null
-  telegram: string | null
-  discord: string | null
-  zcash_ua: string | null
-  avatar_url: string | null
-  role: Role
-  cohort_id: string | null
-  enrolled_at: string | null
-  xp: number
-  is_public: boolean
-  created_at: string
-}
-
-export interface Cohort {
-  id: string
   name: string
-  start_date: string
-  end_date: string
-  max_students: number
-  status: CohortStatus
-  discord_invite: string | null
+  username?: string
+  bio?: string
+  country?: string
+  github?: string
+  x_handle?: string
+  telegram?: string
+  discord?: string
+  zcash_ua?: string
+  avatar_url?: string
+  role: Role
+  cohort_id?: string
+  xp: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Application {
   id: string
   name: string
   email: string
-  github: string | null
-  country: string | null
-  background: string | null
-  motivation: string | null
-  status: ApplicationStatus
-  cohort_id: string | null
-  reviewed_by: string | null
-  reviewed_at: string | null
-  admin_notes: string | null
-  created_at: string
+  country: string
+  github?: string
+  x_handle?: string
+  discord?: string
+  telegram?: string
+  zcash_ua?: string
+  experience_level: 'beginner' | 'intermediate' | 'advanced'
+  motivation: string
+  project_idea?: string
+  referral?: string
+  status: 'pending' | 'accepted' | 'waitlisted' | 'rejected'
+  cohort_id?: string
+  created_at?: string
+}
+
+export interface Cohort {
+  id: string
+  name: string
+  starts_at: string
+  ends_at: string
+  max_students: number
+  status: 'upcoming' | 'active' | 'completed'
 }
 
 export interface LessonProgress {
   id: string
   user_id: string
+  cohort_id: string
+  stage: string
   lesson_id: string
   completed: boolean
-  completed_at: string | null
-  time_spent_mins: number | null
-  bookmarked: boolean
+  completed_at?: string
 }
 
 export interface LabSubmission {
   id: string
   user_id: string
+  cohort_id: string
+  stage: string
   lab_id: string
-  submission_url: string | null
-  submission_notes: string | null
-  status: LabStatus
-  feedback: string | null
-  mentor_id: string | null
-  submitted_at: string
-  reviewed_at: string | null
-  xp_awarded: number
+  github_url: string
+  notes?: string
+  status: 'pending' | 'under_review' | 'approved' | 'rejected'
+  xp_awarded?: number
+  reviewed_by?: string
+  created_at?: string
 }
 
 export interface Achievement {
@@ -86,18 +78,24 @@ export interface Achievement {
   awarded_at: string
 }
 
+export interface ChatMessage {
+  id: string
+  user_id: string
+  cohort_id: string
+  channel: string
+  content: string
+  created_at: string
+  profiles?: { name: string; avatar_url?: string }
+}
+
 export interface Lesson {
   id: string
-  title: string
-  slug: string
   stage: string
-  module: string
   week: number
-  order: number
-  duration_mins: number
-  type: LessonType
-  video_id?: string
-  why_it_matters?: string
-  tags: string[]
-  prerequisites: string[]
+  title: string
+  subtitle?: string
+  duration_min: number
+  xp: number
+  type: 'lesson' | 'lab' | 'workshop'
+  content?: string
 }
