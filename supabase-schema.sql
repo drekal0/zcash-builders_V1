@@ -137,7 +137,29 @@ create table public.bookmarks (
   primary key(user_id, lesson_id)
 );
 
+-- ── ROLE HELPERS ─────────────────────────────────────────────
+create or replace function public.is_admin()
+returns boolean language sql security definer stable set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role in ('admin', 'admin+student')
+  );
+$$;
+
+create or replace function public.is_mentor_or_admin()
+returns boolean language sql security definer stable set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role in ('mentor', 'admin', 'admin+student')
+  );
+$$;
+
 -- ── ROW LEVEL SECURITY ───────────────────────────────────────
+alter table public.cohorts       enable row level security;
 alter table public.profiles      enable row level security;
 alter table public.applications  enable row level security;
 alter table public.lesson_progress enable row level security;
@@ -146,7 +168,14 @@ alter table public.achievements  enable row level security;
 alter table public.chat_messages enable row level security;
 alter table public.bookmarks     enable row level security;
 
--- Profiles: users can read public profiles, only edit their own
+-- Cohorts: publicly readable; only admins can manage
+create policy "Cohorts are publicly readable"
+  on public.cohorts for select using (true);
+
+create policy "Admins can manage cohorts"
+  on public.cohorts for all using (public.is_admin());
+
+-- Profiles: users can read public profiles, only edit their own; admins see all
 create policy "Public profiles are viewable by everyone"
   on public.profiles for select using (is_public = true);
 
@@ -156,21 +185,45 @@ create policy "Users can view their own profile"
 create policy "Users can update their own profile"
   on public.profiles for update using (auth.uid() = id);
 
--- Applications: anyone can insert (apply), only admin can read all
+create policy "Admins can read all profiles"
+  on public.profiles for select using (public.is_admin());
+
+-- Applications: anyone can insert (apply), only admin can read/update
 create policy "Anyone can apply"
   on public.applications for insert with check (true);
 
--- Lesson progress: users can only see and update their own
+create policy "Admins can read all applications"
+  on public.applications for select using (public.is_admin());
+
+create policy "Admins can update applications"
+  on public.applications for update using (public.is_admin());
+
+-- Lesson progress: users can only see and update their own; mentors/admins see all
 create policy "Users can manage their own progress"
   on public.lesson_progress for all using (auth.uid() = user_id);
 
--- Lab submissions: users manage their own
+create policy "Mentors and admins can read all lesson progress"
+  on public.lesson_progress for select using (public.is_mentor_or_admin());
+
+-- Lab submissions: users manage their own; mentors/admins can read + update
 create policy "Users can manage their own lab submissions"
   on public.lab_submissions for all using (auth.uid() = user_id);
 
--- Achievements: users can read their own
+create policy "Mentors and admins can read all lab submissions"
+  on public.lab_submissions for select using (public.is_mentor_or_admin());
+
+create policy "Mentors and admins can update lab submissions"
+  on public.lab_submissions for update using (public.is_mentor_or_admin());
+
+-- Achievements: users can read their own; admins can read/insert all
 create policy "Users can view their own achievements"
   on public.achievements for select using (auth.uid() = user_id);
+
+create policy "Admins can read all achievements"
+  on public.achievements for select using (public.is_admin());
+
+create policy "Admins can insert achievements"
+  on public.achievements for insert with check (public.is_admin());
 
 -- Chat: cohort members can read and write
 create policy "Cohort members can read chat"
