@@ -12,7 +12,7 @@ interface NavItem {
 }
 
 interface SidebarProps {
-  role?: 'student' | 'admin' | 'admin+student' | 'mentor'
+  role?: 'student' | 'admin' | 'admin+student' | 'mentor' | 'region_lead'
   userName?: string
   userInitial?: string
   cohort?: string
@@ -262,11 +262,19 @@ export default function Sidebar({ role = 'student', userName = 'Student', userIn
             Community
           </Link>
 
-          {/* Admin link — only for admin+student */}
+          {/* Admin link — only for admin */}
           {(role === 'admin' || role === 'admin+student') && (
             <Link href="/admin" style={{ ...navLinkStyle(isActive('/admin')), color: 'var(--red)', borderColor: isActive('/admin') ? 'var(--red-dim)' : 'transparent', background: isActive('/admin') ? 'var(--red-faint)' : 'transparent', marginTop: '8px', borderTop: '1px solid var(--line)', paddingTop: '12px' }}>
               <span style={iconStyle}>{icons.admin}</span>
               Admin Panel
+            </Link>
+          )}
+
+          {/* Region Lead Dashboard */}
+          {role === 'region_lead' && (
+            <Link href="/lead-admin" style={{ ...navLinkStyle(isActive('/lead-admin')), color: '#f4b728', borderColor: isActive('/lead-admin') ? 'rgba(244,183,40,0.3)' : 'transparent', background: isActive('/lead-admin') ? 'rgba(244,183,40,0.08)' : 'transparent', marginTop: '8px', borderTop: '1px solid var(--line)', paddingTop: '12px' }}>
+              <span style={iconStyle}>{icons.admin}</span>
+              Region Dashboard
             </Link>
           )}
         </div>

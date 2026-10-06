@@ -1,4 +1,15 @@
-export type Role = 'student' | 'admin' | 'mentor'
+export type Role = 'student' | 'admin' | 'admin+student' | 'mentor' | 'region_lead'
+
+export type Region = 'west-africa' | 'east-africa' | 'latam' | 'apac' | 'europe' | 'global'
+
+export const REGION_LABELS: Record<Region, string> = {
+  'west-africa':  'West Africa',
+  'east-africa':  'East Africa',
+  'latam':        'Latin America',
+  'apac':         'Asia-Pacific',
+  'europe':       'Europe',
+  'global':       'Global',
+}
 
 export interface Profile {
   id: string
@@ -39,10 +50,19 @@ export interface Application {
 export interface Cohort {
   id: string
   name: string
-  starts_at: string
-  ends_at: string
+  region?: Region
+  region_lead_id?: string
+  language?: string
+  timezone?: string
+  description?: string
+  website?: string
+  start_date?: string
+  end_date?: string
+  starts_at?: string   // legacy alias
+  ends_at?: string     // legacy alias
   max_students: number
-  status: 'upcoming' | 'active' | 'completed'
+  status: 'upcoming' | 'active' | 'open' | 'completed'
+  is_public?: boolean
 }
 
 export interface LessonProgress {
