@@ -188,6 +188,24 @@ create index if not exists cohorts_region_idx  on public.cohorts(region);
 create index if not exists profiles_region_idx on public.profiles(region);
 create index if not exists cohorts_lead_idx    on public.cohorts(region_lead_id);
 
+-- ── SEED: GLOBAL COHORT ──────────────────────────────────────────────────────
+-- Open to builders from any region worldwide
+insert into public.cohorts (id, name, region, language, timezone, description, start_date, end_date, max_students, status, is_public)
+values (
+  'cohort-global-01',
+  'Global Cohort 01',
+  'global',
+  'en',
+  'UTC',
+  'Open to Zcash builders worldwide — no regional requirement',
+  '2026-11-01',
+  '2026-12-27',
+  50,
+  'open',
+  true
+)
+on conflict (id) do nothing;
+
 -- ── HOW TO CREATE A NEW REGIONAL COHORT ──────────────────────────────────────
 -- 1. Insert the cohort:
 --    insert into public.cohorts (id, name, region, region_lead_id, language, timezone, start_date, end_date, max_students, status)
