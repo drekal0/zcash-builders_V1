@@ -52,6 +52,8 @@ export default function AdminPage() {
   const [search, setSearch]             = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('')
   const [selected, setSelected]         = useState<Application | null>(null)
+  const [cohorts, setCohorts]           = useState<{ id: string; name: string; region?: string }[]>([])
+  const [selectedCohort, setSelectedCohort] = useState('cohort-01')
   const [actionLoading, setActionLoading] = useState(false)
   const [actionMsg, setActionMsg]       = useState('')
   const [actionIsError, setActionIsError] = useState(false)
@@ -63,13 +65,18 @@ export default function AdminPage() {
     const client = createClient()
     if (!client) { setLoading(false); return }
 
-    const [appsRes, studentsRes] = await Promise.all([
+    const [appsRes, studentsRes, cohortsRes] = await Promise.all([
       client.from('applications').select('*').order('created_at', { ascending: false }),
       client.from('profiles').select('*').eq('role', 'student').order('enrolled_at', { ascending: false }),
+      client.from('cohorts').select('id, name, region').order('created_at', { ascending: true }),
     ])
 
     if (appsRes.data)     setApplications(appsRes.data)
     if (studentsRes.data) setStudents(studentsRes.data)
+    if (cohortsRes.data && cohortsRes.data.length > 0) {
+      setCohorts(cohortsRes.data)
+      setSelectedCohort(cohortsRes.data[0].id)
+    }
     setLoading(false)
   }
 
@@ -83,7 +90,7 @@ export default function AdminPage() {
       // Use the accept_and_enroll RPC for atomic accept + profile enrollment
       const { data, error } = await client.rpc('accept_and_enroll', {
         p_application_id: id,
-        p_cohort_id: 'cohort-01',
+        p_cohort_id: selectedCohort,
         p_admin_notes: adminNotes || null,
       })
 
@@ -479,6 +486,26 @@ export default function AdminPage() {
                   <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--success)' }}>
                     Accepted · enrolled in cohort-01
                   </span>
+                </div>
+              )}
+
+              {/* Cohort selector */}
+              {selected.status === 'pending' && cohorts.length > 0 && (
+                <div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-4)', marginBottom: '8px' }}>Enroll Into Cohort</div>
+                  <select
+                    value={selectedCohort}
+                    onChange={e => setSelectedCohort(e.target.value)}
+                    style={{ width: '100%', background: 'var(--bg-3)', border: '1px solid var(--line-2)', color: 'var(--ink)', padding: '10px 12px', borderRadius: '8px', fontFamily: 'var(--mono)', fontSize: '12px', outline: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
+                    onFocus={e => e.target.style.borderColor = 'var(--gold)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line-2)'}
+                  >
+                    {cohorts.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}{c.region ? ` · ${c.region}` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
