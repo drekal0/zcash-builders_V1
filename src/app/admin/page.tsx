@@ -54,6 +54,8 @@ export default function AdminPage() {
   const [selected, setSelected]         = useState<Application | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
   const [actionMsg, setActionMsg]       = useState('')
+  const [actionIsError, setActionIsError] = useState(false)
+  const [adminNotes, setAdminNotes]     = useState('')
 
   useEffect(() => { fetchData() }, [])
 
@@ -73,20 +75,44 @@ export default function AdminPage() {
 
   async function updateStatus(id: string, status: string) {
     setActionLoading(true)
+    setActionIsError(false)
     const client = createClient()
     if (!client) return
 
-    const { error } = await client
-      .from('applications')
-      .update({ status, reviewed_at: new Date().toISOString() })
-      .eq('id', id)
+    if (status === 'accepted') {
+      // Use the accept_and_enroll RPC for atomic accept + profile enrollment
+      const { data, error } = await client.rpc('accept_and_enroll', {
+        p_application_id: id,
+        p_cohort_id: 'cohort-01',
+        p_admin_notes: adminNotes || null,
+      })
 
-    if (!error) {
-      setApplications(prev => prev.map(a => a.id === id ? { ...a, status: status as any } : a))
-      if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: status as any } : null)
-      setActionMsg(`Application ${status}`)
-      setTimeout(() => setActionMsg(''), 2500)
+      if (!error && data?.ok) {
+        setApplications(prev => prev.map(a => a.id === id ? { ...a, status: 'accepted' } : a))
+        if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: 'accepted' } : null)
+        setActionMsg(data.message || 'Accepted')
+        setAdminNotes('')
+      } else {
+        setActionIsError(true)
+        setActionMsg(error?.message || data?.message || 'Accept failed')
+      }
+    } else {
+      const { error } = await client
+        .from('applications')
+        .update({ status, reviewed_at: new Date().toISOString() })
+        .eq('id', id)
+
+      if (!error) {
+        setApplications(prev => prev.map(a => a.id === id ? { ...a, status: status as any } : a))
+        if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: status as any } : null)
+        setActionMsg(`Marked as ${status}`)
+      } else {
+        setActionIsError(true)
+        setActionMsg(error.message)
+      }
     }
+
+    setTimeout(() => { setActionMsg(''); setActionIsError(false) }, 3500)
     setActionLoading(false)
   }
 
@@ -226,8 +252,8 @@ export default function AdminPage() {
               </div>
             </div>
             {actionMsg && (
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--success)', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', padding: '8px 14px', borderRadius: '8px' }}>
-                ✓ {actionMsg}
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: actionIsError ? 'var(--red)' : 'var(--success)', background: actionIsError ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)', border: `1px solid ${actionIsError ? 'rgba(248,113,113,0.2)' : 'rgba(74,222,128,0.2)'}`, padding: '8px 14px', borderRadius: '8px' }}>
+                {actionIsError ? '✕' : '✓'} {actionMsg}
               </div>
             )}
           </div>
@@ -446,15 +472,43 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Enrolled badge */}
+              {selected.status === 'accepted' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '8px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth={2.5} strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--success)' }}>
+                    Accepted · enrolled in cohort-01
+                  </span>
+                </div>
+              )}
+
+              {/* Admin notes */}
+              {selected.status === 'pending' && (
+                <div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-4)', marginBottom: '8px' }}>Admin Notes (optional)</div>
+                  <textarea
+                    value={adminNotes}
+                    onChange={e => setAdminNotes(e.target.value)}
+                    placeholder="Internal notes saved with the decision…"
+                    rows={2}
+                    style={{ width: '100%', background: 'var(--bg-3)', border: '1px solid var(--line-2)', color: 'var(--ink)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontFamily: 'var(--sans)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => e.target.style.borderColor = 'var(--gold)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--line-2)'}
+                  />
+                </div>
+              )}
+
               {/* Action buttons — only for pending */}
               {selected.status === 'pending' && (
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => updateStatus(selected.id, 'accepted')}
                     disabled={actionLoading}
-                    style={{ flex: 1, padding: '11px', background: 'var(--gold)', color: '#000', fontWeight: 700, fontSize: '13px', border: 'none', borderRadius: '8px', cursor: actionLoading ? 'not-allowed' : 'pointer', minHeight: '44px', fontFamily: 'var(--sans)' }}
+                    style={{ flex: 1, padding: '11px', background: 'var(--gold)', color: '#000', fontWeight: 700, fontSize: '13px', border: 'none', borderRadius: '8px', cursor: actionLoading ? 'not-allowed' : 'pointer', minHeight: '44px', fontFamily: 'var(--sans)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    ✓ Accept
+                    {actionLoading ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ animation: 'spin 0.7s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    ) : '✓'} Accept & Enroll
                   </button>
                   <button
                     onClick={() => updateStatus(selected.id, 'waitlisted')}

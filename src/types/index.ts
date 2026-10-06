@@ -14,9 +14,10 @@ export interface Profile {
   avatar_url?: string
   role: Role
   cohort_id?: string
+  enrolled_at?: string
   xp: number
+  is_public?: boolean
   created_at?: string
-  updated_at?: string
 }
 
 export interface Application {
@@ -25,17 +26,14 @@ export interface Application {
   email: string
   country: string
   github?: string
-  x_handle?: string
-  discord?: string
-  telegram?: string
-  zcash_ua?: string
-  experience_level: 'beginner' | 'intermediate' | 'advanced'
-  motivation: string
-  project_idea?: string
-  referral?: string
+  background?: string   // 'rust' | 'typescript' | 'python' | 'mobile' | 'other'
+  motivation?: string
   status: 'pending' | 'accepted' | 'waitlisted' | 'rejected'
   cohort_id?: string
-  created_at?: string
+  reviewed_by?: string
+  reviewed_at?: string
+  admin_notes?: string
+  created_at: string
 }
 
 export interface Cohort {
