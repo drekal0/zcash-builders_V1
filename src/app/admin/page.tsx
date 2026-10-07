@@ -5,9 +5,13 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import type { Application } from '@/types'
+import type { Application, Profile } from '@/types'
+import TeamTab from '@/components/admin/TeamTab'
+import CohortsTab from '@/components/admin/CohortsTab'
+import ContentTab from '@/components/admin/ContentTab'
+import type { AdminProfile } from '@/components/admin/shared'
 
-type View = 'overview' | 'applicants' | 'students'
+type View = 'overview' | 'applicants' | 'students' | 'team' | 'cohorts' | 'content'
 type StatusFilter = '' | 'pending' | 'accepted' | 'rejected' | 'waitlisted'
 
 const ZcashLogo = () => (
@@ -47,7 +51,9 @@ const AVATAR_COLORS = ['#f4b728','#63b4ff','#c084fc','#4ade80','#f87171','#fb923
 export default function AdminPage() {
   const [view, setView]                 = useState<View>('overview')
   const [applications, setApplications] = useState<Application[]>([])
-  const [students, setStudents]         = useState<any[]>([])
+  const [students, setStudents]         = useState<Profile[]>([])
+  const [me, setMe]                     = useState<AdminProfile | null>(null)
+  const [myCaps, setMyCaps]             = useState<Set<string>>(new Set())
   const [loading, setLoading]           = useState(true)
   const [search, setSearch]             = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('')
@@ -59,11 +65,22 @@ export default function AdminPage() {
   const [actionIsError, setActionIsError] = useState(false)
   const [adminNotes, setAdminNotes]     = useState('')
 
-  useEffect(() => { fetchData() }, [])
-
   async function fetchData() {
     const client = createClient()
-    if (!client) { setLoading(false); return }
+    if (!client) { return } // null only during SSR/build; the effect re-runs client-side
+
+    // Current user → their profile (for is_primary_admin) and capabilities,
+    // which gate the Team / Cohorts / Content tabs. Server RLS enforces the
+    // real rules; this gating is UX only.
+    const { data: { user } } = await client.auth.getUser()
+    if (user) {
+      const [meRes, capsRes] = await Promise.all([
+        client.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+        client.from('admin_capabilities').select('capability').eq('admin_id', user.id),
+      ])
+      if (meRes.data) setMe(meRes.data as AdminProfile)
+      if (capsRes.data) setMyCaps(new Set((capsRes.data as { capability: string }[]).map(r => r.capability)))
+    }
 
     const [appsRes, studentsRes, cohortsRes] = await Promise.all([
       client.from('applications').select('*').order('created_at', { ascending: false }),
@@ -78,6 +95,18 @@ export default function AdminPage() {
       setSelectedCohort(cohortsRes.data[0].id)
     }
     setLoading(false)
+  }
+
+  useEffect(() => { void Promise.resolve().then(fetchData) }, [])
+
+  // Capability gating — primary admin implicitly holds every capability.
+  const isPrimary = !!me?.is_primary_admin
+  const can = (cap: string) => isPrimary || myCaps.has(cap)
+
+  function notify(msg: string, isError = false) {
+    setActionIsError(isError)
+    setActionMsg(msg)
+    setTimeout(() => { setActionMsg(''); setActionIsError(false) }, 3500)
   }
 
   async function updateStatus(id: string, status: string) {
@@ -110,8 +139,8 @@ export default function AdminPage() {
         .eq('id', id)
 
       if (!error) {
-        setApplications(prev => prev.map(a => a.id === id ? { ...a, status: status as any } : a))
-        if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: status as any } : null)
+        setApplications(prev => prev.map(a => a.id === id ? { ...a, status: status as Application['status'] } : a))
+        if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: status as Application['status'] } : null)
         setActionMsg(`Marked as ${status}`)
       } else {
         setActionIsError(true)
@@ -160,6 +189,21 @@ export default function AdminPage() {
       label: `Students (${enrolled})`,
       icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
     },
+    ...(can('manage_admins') ? [{
+      id: 'team' as View,
+      label: 'Team',
+      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    }] : []),
+    ...(can('review_labs') ? [{
+      id: 'cohorts' as View,
+      label: 'Cohorts',
+      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M3 3h18v4H3zM3 10h18v4H3zM3 17h18v4H3z"/></svg>,
+    }] : []),
+    ...(can('edit_lessons') ? [{
+      id: 'content' as View,
+      label: 'Content',
+      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+    }] : []),
   ]
 
   const sidebarStyle: React.CSSProperties = {
@@ -252,10 +296,16 @@ export default function AdminPage() {
               <div style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(28px,3vw,38px)', letterSpacing: '-0.025em', marginBottom: '4px' }}>
                 {view === 'overview' ? <>Program <em style={{ fontStyle: 'italic' }}>Overview</em></> :
                  view === 'applicants' ? <em style={{ fontStyle: 'italic' }}>Applicants</em> :
-                 <>Active <em style={{ fontStyle: 'italic' }}>Students</em></>}
+                 view === 'students' ? <>Active <em style={{ fontStyle: 'italic' }}>Students</em></> :
+                 view === 'team' ? <>Admin <em style={{ fontStyle: 'italic' }}>Team</em></> :
+                 view === 'cohorts' ? <em style={{ fontStyle: 'italic' }}>Cohorts</em> :
+                 <>Lesson <em style={{ fontStyle: 'italic' }}>Content</em></>}
               </div>
               <div style={{ fontSize: '13px', color: 'var(--ink-3)' }}>
-                Cohort 01 · 2026
+                {view === 'team' ? 'Admins, mentors & capabilities' :
+                 view === 'cohorts' ? 'Lab review settings' :
+                 view === 'content' ? 'Supporting videos & custom lessons' :
+                 'Cohort 01 · 2026'}
               </div>
             </div>
             {actionMsg && (
@@ -429,6 +479,21 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
+              )}
+
+              {/* ── TEAM ── */}
+              {view === 'team' && can('manage_admins') && (
+                <TeamTab currentUserId={me?.id ?? null} notify={notify} />
+              )}
+
+              {/* ── COHORTS ── */}
+              {view === 'cohorts' && can('review_labs') && (
+                <CohortsTab notify={notify} />
+              )}
+
+              {/* ── CONTENT ── */}
+              {view === 'content' && can('edit_lessons') && (
+                <ContentTab notify={notify} />
               )}
             </>
           )}
