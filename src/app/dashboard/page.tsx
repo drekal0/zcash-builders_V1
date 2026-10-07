@@ -10,19 +10,20 @@ import Sidebar from '@/components/nav/Sidebar'
 import type { Profile, LabSubmission, LabStatus } from '@/types'
 import { STAGE_META } from '@/lib/design-tokens'
 import { ALL_LESSONS, LESSON_MAP, type LessonMeta } from '@/lib/curriculum/lessons'
-import { WEEK_OUTLINE, TOTAL_LABS, type LabMeta } from '@/lib/curriculum/outline'
+import { STAGE_MODULES, TOTAL_LABS, type LabMeta } from '@/lib/curriculum/outline'
+import { isPublished } from '@/lib/curriculum/lessons'
 
 // ── curriculum ────────────────────────────────────────────────
-// Stage → week → lessons, built from the published lesson library
-// (lessons.ts) laid over the programme outline (outline.ts). A week with no
-// lessons is one whose content hasn't been published yet.
+// Stage → module → lessons, built from the programme outline (outline.ts).
+// Each module ("week" row) carries its lessons and the lab that closes it. A
+// lesson with no published content yet is shown as coming soon.
 const STAGES = STAGE_META.map(meta => {
-  const weeks = WEEK_OUTLINE
-    .filter(w => w.stage === meta.id)
-    .map(w => ({
-      ...w,
-      lessons: ALL_LESSONS.filter(l => l.stage === meta.id && l.week === w.week) as LessonMeta[],
-    }))
+  const weeks = (STAGE_MODULES[meta.id] ?? []).map(m => ({
+    week: m.week,
+    title: m.title,
+    lessons: m.lessons.filter(l => isPublished(l.id)).map(l => LESSON_MAP.get(l.id)!) as LessonMeta[],
+    labs: m.lab ? [m.lab] : [],
+  }))
   return { ...meta, weekRange: meta.weeks, weeks, lessons: weeks.flatMap(w => w.lessons) }
 })
 
@@ -341,7 +342,7 @@ export default function DashboardPage() {
                 {isOpen && (
                   <div style={{ background: 'var(--bg)', borderTop: '1px solid var(--line)' }}>
                     {stage.weeks.map(week => (
-                      <div key={week.week} style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
+                      <div key={`${week.week}-${week.title}`} style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
                         <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--ink-4)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '8px' }}>
                           Week {week.week} — {week.title}
                         </div>

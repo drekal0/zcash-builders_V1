@@ -169,7 +169,7 @@ export default function LessonPage({ params }: { params: Promise<PageParams> }) 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '40px' }}>
           <div style={{ fontSize: '48px' }}>📭</div>
           <div style={{ fontSize: '20px', color: C.ink, fontWeight: 600 }}>Lesson not found</div>
-          <div style={{ fontSize: '14px', color: C.ink3 }}>The lesson ID <code style={{ background: C.bg3, padding: '2px 6px', borderRadius: '4px', fontFamily: 'var(--mono)' }}>{lessonId}</code> doesn't exist.</div>
+          <div style={{ fontSize: '14px', color: C.ink3 }}>The lesson ID <code style={{ background: C.bg3, padding: '2px 6px', borderRadius: '4px', fontFamily: 'var(--mono)' }}>{lessonId}</code> doesn&apos;t exist.</div>
           <Link href="/learn" style={{ marginTop: '8px', padding: '10px 20px', background: C.goldFaint, border: `1px solid ${C.goldDim}`, borderRadius: '8px', color: C.gold, fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
             ← Back to Learning Path
           </Link>

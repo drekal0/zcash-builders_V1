@@ -3,152 +3,27 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { STAGE_META } from '@/lib/design-tokens'
+import { STAGE_MODULES, TOTAL_LESSONS, TOTAL_LABS, TOTAL_XP } from '@/lib/curriculum/outline'
+import { isPublished } from '@/lib/curriculum/lessons'
 
 // ─── Curriculum data ──────────────────────────────────────────────────────────
-const CURRICULUM = [
-  {
-    stage: '00',
-    weeks: [
-      {
-        week: 1, title: 'Getting Started',
-        lessons: [
-          { id: 'l-00-01', title: 'What is a Blockchain?', type: 'VIDEO', duration: 12, xp: 50 },
-          { id: 'l-00-02', title: 'Distributed Ledgers vs Traditional Databases', type: 'READING', duration: 10, xp: 50 },
-          { id: 'l-00-03', title: 'Cryptographic Hash Functions', type: 'READING', duration: 15, xp: 75 },
-          { id: 'l-00-04', title: 'Digital Signatures & Public Key Cryptography', type: 'VIDEO', duration: 18, xp: 75 },
-          { id: 'l-00-05', title: 'Merkle Trees', type: 'READING', duration: 12, xp: 50 },
-        ],
-        lab: { id: 'lab-00', title: 'Blockchain Visualiser', xp: 200 },
-      },
-      {
-        week: 2, title: 'Blockchain Fundamentals',
-        lessons: [
-          { id: 'l-00-06', title: 'How Blocks Are Mined', type: 'VIDEO', duration: 14, xp: 50 },
-          { id: 'l-00-07', title: 'Proof of Work vs Proof of Stake', type: 'READING', duration: 16, xp: 75 },
-          { id: 'l-00-08', title: 'Consensus Mechanisms', type: 'READING', duration: 13, xp: 50 },
-          { id: 'l-00-09', title: 'UTXO vs Account Model', type: 'VIDEO', duration: 15, xp: 75 },
-          { id: 'l-00-10', title: 'Transactions & Mempool', type: 'READING', duration: 12, xp: 50 },
-          { id: 'l-00-11', title: 'Wallets & Key Derivation (BIP-32/39/44)', type: 'VIDEO', duration: 20, xp: 100 },
-        ],
-      },
-    ],
-  },
-  {
-    stage: '01',
-    weeks: [
-      {
-        week: 3, title: 'Understanding Zcash',
-        lessons: [
-          { id: 'l-01-01', title: 'Why Privacy Matters in Crypto', type: 'VIDEO', duration: 12, xp: 50 },
-          { id: 'l-01-02', title: 'Zcash History & the Ceremony', type: 'READING', duration: 15, xp: 50 },
-          { id: 'l-01-03', title: 'Transparent vs Shielded Pools', type: 'VIDEO', duration: 18, xp: 75 },
-          { id: 'l-01-04', title: 'zk-SNARKs in Plain English', type: 'READING', duration: 20, xp: 100 },
-          { id: 'l-01-05', title: 'The Sapling Protocol', type: 'VIDEO', duration: 16, xp: 75 },
-          { id: 'l-01-06', title: 'Ironwood & Halo2 (Post-NU6.3)', type: 'READING', duration: 18, xp: 75 },
-          { id: 'l-01-07', title: 'Unified Addresses Explained', type: 'VIDEO', duration: 14, xp: 75 },
-        ],
-        lab: { id: 'lab-01', title: 'Unified Address Explorer', xp: 200 },
-      },
-      {
-        week: 4, title: 'Zcash Deep Dive',
-        lessons: [
-          { id: 'l-01-08', title: 'ZIPs — How Zcash Improves Itself', type: 'READING', duration: 12, xp: 50 },
-          { id: 'l-01-09', title: 'The Zcash Development Fund', type: 'READING', duration: 10, xp: 50 },
-          { id: 'l-01-10', title: 'Governance & Zcash Community', type: 'VIDEO', duration: 12, xp: 50 },
-          { id: 'l-01-11', title: 'Zcash Full Nodes: Zebra & the Z3 Stack', type: 'VIDEO', duration: 16, xp: 75 },
-          { id: 'l-01-12', title: 'Indexing with Zaino', type: 'READING', duration: 14, xp: 75 },
-          { id: 'l-01-13', title: 'Light Client Protocol', type: 'VIDEO', duration: 15, xp: 75 },
-          { id: 'l-01-14', title: 'Zcash Ecosystem Map', type: 'READING', duration: 10, xp: 50 },
-        ],
-        lab: { id: 'lab-06', title: 'Viewing Keys & Encrypted Memo App', xp: 250 },
-      },
-    ],
-  },
-  {
-    stage: '02',
-    weeks: [
-      {
-        week: 5, title: 'Build with Zcash',
-        lessons: [
-          { id: 'l-02-01', title: 'Zcash SDK Overview (Rust & TypeScript)', type: 'VIDEO', duration: 14, xp: 75 },
-          { id: 'l-02-02', title: 'Setting Up Your Dev Environment', type: 'VIDEO', duration: 20, xp: 100 },
-          { id: 'l-02-03', title: 'Sending Your First Ironwood Transaction', type: 'VIDEO', duration: 25, xp: 150 },
-          { id: 'l-02-04', title: 'Reading Blockchain State via RPC', type: 'READING', duration: 18, xp: 100 },
-          { id: 'l-02-05', title: 'ZIP-321: Payment URIs', type: 'READING', duration: 12, xp: 75 },
-          { id: 'l-02-06', title: 'ZIP-315: Transaction Status', type: 'READING', duration: 10, xp: 75 },
-        ],
-        lab: { id: 'lab-02', title: 'Shielded Transaction Sender', xp: 300 },
-      },
-      {
-        week: 6, title: 'Real-World Apps',
-        lessons: [
-          { id: 'l-02-07', title: 'Building a Payment Gateway', type: 'VIDEO', duration: 25, xp: 150 },
-          { id: 'l-02-08', title: 'Wallet Sync & Block Scanning', type: 'READING', duration: 20, xp: 100 },
-          { id: 'l-02-09', title: 'Memo Fields & Encrypted Messages', type: 'READING', duration: 15, xp: 75 },
-          { id: 'l-02-10', title: 'Error Handling in Zcash Apps', type: 'READING', duration: 12, xp: 75 },
-          { id: 'l-02-11', title: 'Testing with Testnet & Regtest', type: 'VIDEO', duration: 16, xp: 100 },
-          { id: 'l-02-12', title: 'Security Best Practices', type: 'READING', duration: 14, xp: 75 },
-          { id: 'l-02-13', title: 'Performance & Bandwidth Optimization', type: 'READING', duration: 12, xp: 75 },
-          { id: 'l-02-14', title: 'Deploying to Production', type: 'VIDEO', duration: 18, xp: 100 },
-        ],
-        lab: { id: 'lab-03', title: 'Payment Gateway MVP', xp: 300 },
-      },
-      {
-        week: 6, title: 'Advanced Patterns',
-        lessons: [
-          { id: 'l-02-15', title: 'FROST Threshold Signatures — Protocol Overview', type: 'READING', duration: 18, xp: 100 },
-          { id: 'l-02-16', title: 'Key Generation & DKG with ZF FROST', type: 'VIDEO', duration: 22, xp: 125 },
-          { id: 'l-02-17', title: 'Round 1 & 2: Signing Rounds', type: 'VIDEO', duration: 20, xp: 125 },
-          { id: 'l-02-18', title: 'Aggregate & Verify: the FROST Combiner', type: 'READING', duration: 16, xp: 100 },
-          { id: 'l-02-19', title: 'Multisig Treasury Patterns', type: 'READING', duration: 14, xp: 75 },
-        ],
-        lab: { id: 'lab-07', title: 'FROST Multisig Treasury', xp: 350 },
-      },
-    ],
-  },
-  {
-    stage: '03',
-    weeks: [
-      {
-        week: 7, title: 'Contribute to Zcash',
-        lessons: [
-          { id: 'l-03-01', title: 'How Zcash Is Developed (Open Source)', type: 'VIDEO', duration: 12, xp: 75 },
-          { id: 'l-03-02', title: 'Reading the Zebra Codebase', type: 'READING', duration: 20, xp: 100 },
-          { id: 'l-03-03', title: 'Running a Zebra Node', type: 'VIDEO', duration: 25, xp: 150 },
-          { id: 'l-03-04', title: 'Finding Good First Issues', type: 'READING', duration: 10, xp: 50 },
-          { id: 'l-03-05', title: 'Writing a ZIP Proposal', type: 'READING', duration: 18, xp: 100 },
-          { id: 'l-03-06', title: 'Rust for Zcash Contributors', type: 'VIDEO', duration: 20, xp: 100 },
-          { id: 'l-03-07', title: 'Code Review Culture in Zcash', type: 'READING', duration: 12, xp: 75 },
-        ],
-        lab: { id: 'lab-04', title: 'Zebra Node Deployment', xp: 400 },
-      },
-      {
-        week: 7, title: 'Indexing & Infrastructure',
-        lessons: [
-          { id: 'l-03-15', title: 'Post-zcashd Infrastructure: Zaino Architecture', type: 'READING', duration: 16, xp: 100 },
-          { id: 'l-03-16', title: 'Running Zaino with Docker Compose (Z3 Stack)', type: 'VIDEO', duration: 24, xp: 150 },
-          { id: 'l-03-17', title: 'gRPC & lightwalletd-Compatible APIs', type: 'READING', duration: 18, xp: 100 },
-          { id: 'l-03-18', title: 'Indexing Shielded Transactions with Zaino', type: 'VIDEO', duration: 20, xp: 125 },
-          { id: 'l-03-19', title: 'Building a Block Explorer Backend', type: 'READING', duration: 16, xp: 100 },
-        ],
-        lab: { id: 'lab-08', title: 'Zaino-Powered Block Explorer', xp: 400 },
-      },
-      {
-        week: 8, title: 'Ship & Graduate',
-        lessons: [
-          { id: 'l-03-08', title: 'Zcash Grants (ZCG) — Funding Your Project', type: 'READING', duration: 14, xp: 75 },
-          { id: 'l-03-09', title: 'Writing a Grant Proposal', type: 'READING', duration: 18, xp: 100 },
-          { id: 'l-03-10', title: 'Demo Day: Presenting Your Project', type: 'VIDEO', duration: 15, xp: 100 },
-          { id: 'l-03-11', title: 'Building in Public on X & GitHub', type: 'READING', duration: 10, xp: 50 },
-          { id: 'l-03-12', title: 'Mentoring the Next Cohort', type: 'VIDEO', duration: 12, xp: 75 },
-          { id: 'l-03-13', title: 'The Road Ahead: Your Zcash Journey', type: 'READING', duration: 10, xp: 50 },
-          { id: 'l-03-14', title: 'Graduation & Alumni Network', type: 'VIDEO', duration: 8, xp: 50 },
-        ],
-        lab: { id: 'lab-05', title: 'Open Source Contribution', xp: 400 },
-      },
-    ],
-  },
-]
+// Built from the single source of truth in outline.ts. A lesson is shown as a
+// link once its content is published; unpublished lessons render inert.
+const CURRICULUM = (['00', '01', '02', '03'] as const).map(stage => ({
+  stage,
+  weeks: (STAGE_MODULES[stage] ?? []).map(m => ({
+    week: m.week,
+    title: m.title,
+    lessons: m.lessons.map(l => ({
+      id: l.id,
+      title: l.title,
+      duration: l.duration,
+      xp: l.xp,
+      published: isPublished(l.id),
+    })),
+    lab: m.lab,
+  })),
+}))
 
 const STAGE_TABS = [
   { id: '00', label: '00 · FUNDAMENTALS', color: 'var(--stage-00)', border: 'var(--stage-00-b)' },
@@ -157,17 +32,15 @@ const STAGE_TABS = [
   { id: '03', label: '03 · CONTRIBUTE',  color: 'var(--stage-03)', border: 'var(--stage-03-b)' },
 ]
 
-const LOCKED_STAGES = ['01', '02', '03']
 
 // ─── Lesson row ───────────────────────────────────────────────────────────────
-function LessonRow({ lesson, index, stageId, locked }: {
-  lesson: { id: string; title: string; type: string; duration: number; xp: number }
+function LessonRow({ lesson, index, stageId }: {
+  lesson: { id: string; title: string; duration: number; xp: number; published: boolean }
   index: number
   stageId: string
-  locked: boolean
 }) {
   const accent = `var(--stage-${stageId})`
-  const isVideo = lesson.type === 'VIDEO'
+  const published = lesson.published
 
   const inner = (
     <div style={{
@@ -176,12 +49,12 @@ function LessonRow({ lesson, index, stageId, locked }: {
       gap: '12px',
       padding: '10px 16px',
       borderRadius: '8px',
-      opacity: locked ? 0.5 : 1,
-      cursor: locked ? 'default' : 'pointer',
+      opacity: published ? 1 : 0.5,
+      cursor: published ? 'pointer' : 'default',
       transition: 'background 0.15s',
       textDecoration: 'none',
     }}
-    onMouseEnter={e => { if (!locked) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-3)' }}
+    onMouseEnter={e => { if (published) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-3)' }}
     onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
     >
       {/* number circle */}
@@ -189,8 +62,8 @@ function LessonRow({ lesson, index, stageId, locked }: {
         width: '28px',
         height: '28px',
         borderRadius: '50%',
-        border: `1px solid ${locked ? 'var(--line-2)' : accent}`,
-        color: locked ? 'var(--ink-4)' : accent,
+        border: `1px solid ${accent}`,
+        color: accent,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -205,20 +78,18 @@ function LessonRow({ lesson, index, stageId, locked }: {
       <span style={{
         flex: 1,
         fontSize: '13px',
-        color: locked ? 'var(--ink-4)' : 'var(--ink-2)',
+        color: published ? 'var(--ink-2)' : 'var(--ink-4)',
         fontWeight: 400,
       }}>
         {lesson.title}
       </span>
 
-      {/* type pill */}
-      <span className="pill" style={{
-        color: locked ? 'var(--ink-5)' : isVideo ? 'var(--purple)' : 'var(--blue)',
-        borderColor: locked ? 'var(--line-2)' : isVideo ? 'rgba(192,132,252,0.3)' : 'rgba(99,180,255,0.3)',
-        background: locked ? 'transparent' : isVideo ? 'rgba(192,132,252,0.06)' : 'rgba(99,180,255,0.06)',
-      }}>
-        {lesson.type}
-      </span>
+      {/* status pill — only when not yet published */}
+      {!published && (
+        <span className="pill" style={{ color: 'var(--ink-5)', borderColor: 'var(--line-2)', background: 'transparent' }}>
+          SOON
+        </span>
+      )}
 
       {/* duration */}
       <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--ink-4)', minWidth: '28px', textAlign: 'right' }}>
@@ -229,16 +100,16 @@ function LessonRow({ lesson, index, stageId, locked }: {
       <span style={{
         fontFamily: 'var(--mono)',
         fontSize: '11px',
-        color: locked ? 'var(--ink-5)' : 'var(--gold)',
+        color: 'var(--gold)',
         minWidth: '48px',
         textAlign: 'right',
       }}>
-        {locked ? '—' : `+${lesson.xp} XP`}
+        +{lesson.xp} XP
       </span>
     </div>
   )
 
-  if (locked) return inner
+  if (!published) return inner
   return (
     <Link href={`/learn/${lesson.id}`} style={{ textDecoration: 'none', display: 'block' }}>
       {inner}
@@ -293,13 +164,10 @@ export default function LearnPage() {
 
   const stageData = CURRICULUM.find(s => s.stage === activeStage)!
   const meta = STAGE_META.find(m => m.id === activeStage)!
-  const isLocked = LOCKED_STAGES.includes(activeStage)
   const accent = `var(--stage-${activeStage})`
 
-  const totalLessons = CURRICULUM.reduce((acc, s) => acc + s.weeks.reduce((a, w) => a + w.lessons.length, 0), 0)
-  const totalXP = CURRICULUM.reduce((acc, s) =>
-    acc + s.weeks.reduce((a, w) =>
-      a + w.lessons.reduce((b, l) => b + l.xp, 0) + (w.lab?.xp ?? 0), 0), 0)
+  const totalLessons = TOTAL_LESSONS
+  const totalXP = TOTAL_XP
 
   return (
     <div className="page-public" style={{ background: 'var(--bg)' }}>
@@ -357,7 +225,7 @@ export default function LearnPage() {
             {[
               { v: '8', l: 'Weeks' },
               { v: String(totalLessons), l: 'Lessons' },
-              { v: '6', l: 'Labs' },
+              { v: String(TOTAL_LABS), l: 'Labs' },
               { v: totalXP.toLocaleString(), l: 'Total XP' },
             ].map(s => (
               <div key={s.l} className="pill" style={{ color: 'var(--ink-3)', borderColor: 'var(--line-2)' }}>
@@ -434,9 +302,9 @@ export default function LearnPage() {
             </div>
           </div>
 
-          {/* Week groups */}
+          {/* Module groups */}
           {stageData.weeks.map((week, wi) => (
-            <div key={week.week} style={{ borderTop: wi > 0 ? '1px solid var(--line)' : 'none' }}>
+            <div key={`${week.week}-${week.title}`} style={{ borderTop: wi > 0 ? '1px solid var(--line)' : 'none' }}>
               {/* Week header */}
               <div style={{
                 display: 'flex',
@@ -461,43 +329,39 @@ export default function LearnPage() {
                     lesson={lesson}
                     index={li}
                     stageId={activeStage}
-                    locked={isLocked}
                   />
                 ))}
               </div>
 
               {/* Lab */}
               {week.lab && (
-                <LabRow lab={week.lab} stageId={activeStage} locked={isLocked} />
+                <LabRow lab={week.lab} stageId={activeStage} locked={false} />
               )}
             </div>
           ))}
 
-          {/* Locked CTA */}
-          {isLocked && (
-            <div style={{
-              margin: '16px 24px 24px',
-              padding: '20px 24px',
-              borderRadius: '10px',
-              background: 'rgba(244,183,40,0.04)',
-              border: '1px solid var(--gold-dim)',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '20px', marginBottom: '8px' }}>🔒</div>
-              <div style={{ fontFamily: 'var(--serif)', fontSize: '18px', color: 'var(--ink)', marginBottom: '6px' }}>
-                Enroll to access Stage {activeStage}
-              </div>
-              <p className="text-body" style={{ marginBottom: '16px', fontSize: '13px' }}>
-                This stage unlocks when you join a cohort. Apply today — spots are limited.
-              </p>
-              <Link href="/apply" className="btn btn-primary">
-                Apply for Cohort 01
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginLeft: '4px' }}>
-                  <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
+          {/* Enrolment CTA */}
+          <div style={{
+            margin: '16px 24px 24px',
+            padding: '20px 24px',
+            borderRadius: '10px',
+            background: 'rgba(244,183,40,0.04)',
+            border: '1px solid var(--gold-dim)',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontFamily: 'var(--serif)', fontSize: '18px', color: 'var(--ink)', marginBottom: '6px' }}>
+              Join a cohort to track your progress
             </div>
-          )}
+            <p className="text-body" style={{ marginBottom: '16px', fontSize: '13px' }}>
+              The curriculum is open to read. Enrol to open the lessons, earn XP, and submit the labs with mentor review.
+            </p>
+            <Link href="/apply" className="btn btn-primary">
+              Apply for Cohort 01
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginLeft: '4px' }}>
+                <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
         {/* ── What you'll build ── */}
