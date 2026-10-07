@@ -20,17 +20,10 @@
 -- guard trigger, so it must be applied last. Re-running is safe.
 
 -- ── 1. Primary admin flag ─────────────────────────────────────────────────────
+-- (The owner is made primary admin in section 5, after the guard that governs
+-- this column is in place.)
 alter table public.profiles
   add column if not exists is_primary_admin boolean not null default false;
-
--- Make the owner the primary admin (and ensure an admin role). Safe no-op if the
--- account does not exist yet — re-run this statement after first sign-in.
-update public.profiles p
-set is_primary_admin = true,
-    role = case when p.role in ('admin', 'admin+student') then p.role else 'admin+student' end
-where p.id in (
-  select u.id from auth.users u where lower(u.email) = lower('darekalejaiye0@gmail.com')
-);
 
 create or replace function public.is_primary_admin()
 returns boolean language sql stable security definer set search_path = '' as $$
@@ -154,7 +147,12 @@ create policy "Editors manage custom lessons"
 create or replace function public.guard_profile_privileged_columns()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
-  if public.is_primary_admin() then
+  -- Trusted server-side contexts have no end-user: the SQL Editor, the service
+  -- role, migrations, and SECURITY DEFINER maintenance all run with a null
+  -- auth.uid(). End users always have a non-null auth.uid() (and cannot pass the
+  -- profiles RLS for a row that isn't theirs), so allowing null here does not
+  -- open a hole — it just lets admin/migration code through.
+  if auth.uid() is null or public.is_primary_admin() then
     return new;
   end if;
 
@@ -189,6 +187,17 @@ drop trigger if exists guard_profile_privileged_columns on public.profiles;
 create trigger guard_profile_privileged_columns
   before update on public.profiles
   for each row execute function public.guard_profile_privileged_columns();
+
+-- Make the owner the primary admin (and ensure an admin role). Runs now that the
+-- guard above is in place; in the SQL Editor auth.uid() is null, so the guard's
+-- trusted-context branch permits this write. Safe no-op if the account does not
+-- exist yet — re-run after first sign-in.
+update public.profiles p
+set is_primary_admin = true,
+    role = case when p.role in ('admin', 'admin+student') then p.role else 'admin+student' end
+where p.id in (
+  select u.id from auth.users u where lower(u.email) = lower('darekalejaiye0@gmail.com')
+);
 
 -- ── 6. Management RPCs (for the future panel; usable now) ──────────────────────
 -- Promote / demote. Only the primary admin or a 'manage_admins' holder may call
