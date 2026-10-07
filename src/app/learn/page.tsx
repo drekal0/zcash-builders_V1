@@ -169,7 +169,7 @@ function LessonRow({ lesson, index, stageId, locked }: {
   const accent = `var(--stage-${stageId})`
   const isVideo = lesson.type === 'VIDEO'
 
-  return (
+  const inner = (
     <div style={{
       display: 'flex',
       alignItems: 'center',
@@ -179,6 +179,7 @@ function LessonRow({ lesson, index, stageId, locked }: {
       opacity: locked ? 0.5 : 1,
       cursor: locked ? 'default' : 'pointer',
       transition: 'background 0.15s',
+      textDecoration: 'none',
     }}
     onMouseEnter={e => { if (!locked) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-3)' }}
     onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
@@ -235,6 +236,13 @@ function LessonRow({ lesson, index, stageId, locked }: {
         {locked ? '—' : `+${lesson.xp} XP`}
       </span>
     </div>
+  )
+
+  if (locked) return inner
+  return (
+    <Link href={`/learn/${lesson.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+      {inner}
+    </Link>
   )
 }
 
