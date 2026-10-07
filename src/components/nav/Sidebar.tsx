@@ -242,14 +242,14 @@ export default function Sidebar({ role = 'student', userName = 'Student', userIn
           {learnExpanded && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', paddingLeft: '10px', borderLeft: '1px solid var(--line-2)', marginLeft: '15px' }}>
               <Link
-                href="/learn#curriculum"
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', color: 'var(--ink-3)', fontSize: '12px', fontWeight: 500, minHeight: '36px' }}
+                href="/learn/curriculum"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', color: isActive('/learn/curriculum') ? 'var(--gold)' : 'var(--ink-3)', background: isActive('/learn/curriculum') ? 'var(--gold-faint)' : 'transparent', fontSize: '12px', fontWeight: 500, minHeight: '36px' }}
               >
                 Curriculum
               </Link>
               <Link
-                href="/learn"
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', color: 'var(--ink-3)', fontSize: '12px', fontWeight: 500, minHeight: '36px' }}
+                href="/learn/tree"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', color: isActive('/learn/tree') ? 'var(--gold)' : 'var(--ink-3)', background: isActive('/learn/tree') ? 'var(--gold-faint)' : 'transparent', fontSize: '12px', fontWeight: 500, minHeight: '36px' }}
               >
                 Lesson Tree
               </Link>
@@ -331,7 +331,7 @@ export default function Sidebar({ role = 'student', userName = 'Student', userIn
           <span style={{ width: '20px', height: '20px' }}>{icons.dashboard}</span>
           <span className="bottom-nav-label">Learn</span>
         </Link>
-        <Link href="/learn" className={`bottom-nav-item ${pathname.startsWith('/learn') ? 'active' : ''}`} aria-label="Learning Path">
+        <Link href="/learn/curriculum" className={`bottom-nav-item ${pathname.startsWith('/learn') ? 'active' : ''}`} aria-label="Learning Path">
           <span style={{ width: '20px', height: '20px' }}>{icons.learn}</span>
           <span className="bottom-nav-label">Path</span>
         </Link>
