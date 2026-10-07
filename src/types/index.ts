@@ -65,28 +65,34 @@ export interface Cohort {
   is_public?: boolean
 }
 
+// Mirrors public.lesson_progress — unique(user_id, lesson_id)
 export interface LessonProgress {
   id: string
   user_id: string
-  cohort_id: string
   stage: string
   lesson_id: string
   completed: boolean
   completed_at?: string
+  time_spent_mins?: number
+  bookmarked?: boolean
 }
 
+export type LabStatus = 'submitted' | 'under_review' | 'approved' | 'revision_requested'
+
+// Mirrors public.lab_submissions — unique(user_id, lab_id)
 export interface LabSubmission {
   id: string
   user_id: string
-  cohort_id: string
   stage: string
   lab_id: string
-  github_url: string
-  notes?: string
-  status: 'pending' | 'under_review' | 'approved' | 'rejected'
+  submission_url?: string
+  submission_notes?: string
+  status: LabStatus
+  feedback?: string
+  mentor_id?: string
+  submitted_at?: string
+  reviewed_at?: string
   xp_awarded?: number
-  reviewed_by?: string
-  created_at?: string
 }
 
 export interface Achievement {
