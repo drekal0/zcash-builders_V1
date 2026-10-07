@@ -107,14 +107,41 @@ export default function LessonPage({ params }: { params: Promise<PageParams> }) 
   }
 
   /* ── Mark complete ── */
+  const markAsDone = () => {
+    setCompleted(true)
+    setStageLessons((prev: typeof stageLessons) => prev.map(l => l.id === lesson!.id ? { ...l, completed: true } : l))
+    setMarking(false)
+  }
+
   const markComplete = async () => {
     if (!supabase || !profile || !lesson || marking || completed) return
     setMarking(true)
 
+    /* Preferred path: the server awards XP from its own catalog, so the total
+       can't be forged by the client. */
+    const { data: rpc, error: rpcErr } = await supabase.rpc('complete_lesson', { p_lesson_id: lesson.id })
+
+    if (!rpcErr) {
+      const res = (rpc ?? {}) as { ok?: boolean; xp?: number; awarded?: number; message?: string }
+      if (!res.ok) {
+        showToast(res.message || 'Could not complete the lesson — try again', 'error')
+        setMarking(false)
+        return
+      }
+      if (typeof res.xp === 'number') {
+        setProfile((p: Profile | null) => p ? { ...p, xp: res.xp! } : p)
+      }
+      showToast((res.awarded ?? 0) > 0 ? `+${res.awarded} XP earned! Lesson complete 🎉` : 'Lesson complete 🎉', 'success')
+      markAsDone()
+      return
+    }
+
+    /* Fallback for before the server-side XP migration is applied: write directly.
+       Once the migration is in place the RPC above always handles it, and these
+       direct writes are rejected by the guard trigger. */
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setMarking(false); return }
 
-    /* upsert lesson_progress */
     const { error: progressErr } = await supabase
       .from('lesson_progress')
       .upsert({
@@ -131,7 +158,6 @@ export default function LessonPage({ params }: { params: Promise<PageParams> }) 
       return
     }
 
-    /* award XP */
     const { error: xpErr } = await supabase
       .from('profiles')
       .update({ xp: (profile.xp ?? 0) + lesson.xp })
@@ -144,9 +170,7 @@ export default function LessonPage({ params }: { params: Promise<PageParams> }) 
       showToast(`+${lesson.xp} XP earned! Lesson complete 🎉`, 'success')
     }
 
-    setCompleted(true)
-    setStageLessons((prev: typeof stageLessons) => prev.map(l => l.id === lesson.id ? { ...l, completed: true } : l))
-    setMarking(false)
+    markAsDone()
   }
 
   /* ─── Loading ─── */
