@@ -205,6 +205,37 @@ a { color:inherit; text-decoration:none; }
 }
 @media (max-width:1024px) { .menu-btn { display:flex; } }
 
+/* ── Admin panel shell (its own drawer, mirrors the student sidebar) ── */
+.admin-sidebar {
+  position:fixed; top:0; left:0; bottom:0; width:220px; z-index:100;
+  padding:22px 16px; display:flex; flex-direction:column; gap:24px;
+  background:rgba(10,10,10,0.95);
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  border-right:1px solid var(--line); overflow-y:auto;
+  transition:transform 0.25s ease;
+}
+.admin-main { padding-left:220px; min-height:100vh; }
+.admin-main-inner { max-width:1200px; margin:0 auto; padding:40px 36px 80px; }
+.admin-menu-btn { display:none; }
+.admin-sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(2px); z-index:99; }
+@media (max-width:1024px) {
+  .admin-sidebar { transform:translateX(-100%); box-shadow:4px 0 40px rgba(0,0,0,0.6); }
+  .admin-sidebar.open { transform:translateX(0); }
+  .admin-main { padding-left:0; padding-top:64px; }
+  .admin-sidebar-overlay.open { display:block; }
+  .admin-menu-btn {
+    display:flex; position:fixed; top:16px; left:16px;
+    width:40px; height:40px; background:var(--bg-2);
+    border:1px solid var(--line-2); border-radius:var(--r-md);
+    align-items:center; justify-content:center;
+    z-index:101; cursor:pointer; color:var(--ink-2);
+  }
+}
+@media (max-width:640px) {
+  .admin-sidebar { width:280px; }
+  .admin-main-inner { padding:24px 16px 80px; }
+}
+
 .pill {
   display:inline-flex; align-items:center; gap:4px;
   font-family:var(--mono); font-size:10px;

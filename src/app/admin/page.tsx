@@ -55,6 +55,7 @@ export default function AdminPage() {
   const [me, setMe]                     = useState<AdminProfile | null>(null)
   const [myCaps, setMyCaps]             = useState<Set<string>>(new Set())
   const [loading, setLoading]           = useState(true)
+  const [navOpen, setNavOpen]           = useState(false)
   const [search, setSearch]             = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('')
   const [selected, setSelected]         = useState<Application | null>(null)
@@ -206,18 +207,28 @@ export default function AdminPage() {
     }] : []),
   ]
 
-  const sidebarStyle: React.CSSProperties = {
-    position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
-    padding: '22px 16px', display: 'flex', flexDirection: 'column', gap: '24px',
-    background: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(24px)',
-    borderRight: '1px solid var(--line)', zIndex: 100, overflowY: 'auto',
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
 
+      {/* Mobile hamburger + overlay (shown below 1024px) */}
+      <button
+        className="admin-menu-btn"
+        aria-label={navOpen ? 'Close admin menu' : 'Open admin menu'}
+        aria-expanded={navOpen}
+        onClick={() => setNavOpen(o => !o)}
+      >
+        {navOpen
+          ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>}
+      </button>
+      <div
+        className={`admin-sidebar-overlay${navOpen ? ' open' : ''}`}
+        onClick={() => setNavOpen(false)}
+        aria-hidden="true"
+      />
+
       {/* Sidebar */}
-      <nav style={sidebarStyle}>
+      <nav className={`admin-sidebar${navOpen ? ' open' : ''}`} aria-label="Admin navigation">
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
           <ZcashLogo />
           <span style={{ fontFamily: 'var(--serif)', fontSize: '18px', color: 'var(--ink)' }}>
@@ -235,7 +246,7 @@ export default function AdminPage() {
             return (
               <button
                 key={item.id}
-                onClick={() => setView(item.id)}
+                onClick={() => { setView(item.id); setNavOpen(false) }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '10px',
                   padding: '10px 12px', borderRadius: '8px', border: 'none',
@@ -284,8 +295,8 @@ export default function AdminPage() {
       </nav>
 
       {/* Main content */}
-      <main style={{ paddingLeft: '220px', minHeight: '100vh' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 36px 80px' }}>
+      <main className="admin-main">
+        <div className="admin-main-inner">
 
           {/* Page header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', paddingBottom: '28px', borderBottom: '1px solid var(--line)' }}>
