@@ -160,6 +160,7 @@ export default function DashboardPage() {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
   const [labSubs,      setLabSubs]      = useState<Record<string, LabSubmission>>({})
   const [openStages,   setOpenStages]   = useState<Set<string>>(new Set(['00']))
+  const [autoReview,   setAutoReview]   = useState(false)
 
   useEffect(() => {
     if (!client) { router.push('/login'); return }
@@ -182,6 +183,14 @@ export default function DashboardPage() {
       const p = profileRes.data as Profile | null
       if (!p || !p.cohort_id) { router.push('/portal'); return }
       setProfile(p)
+
+      // Does this cohort auto-review labs? (lab_review_mode added by the
+      // admin-roles migration; default to manual if the column/row is absent.)
+      const { data: cohort } = await client
+        .from('cohorts').select('lab_review_mode').eq('id', p.cohort_id).maybeSingle()
+      if (!cancelled && (cohort as { lab_review_mode?: string } | null)?.lab_review_mode === 'auto') {
+        setAutoReview(true)
+      }
 
       // Only count progress against lessons that exist in the library
       const done = new Set<string>(
@@ -223,7 +232,32 @@ export default function DashboardPage() {
       .select()
       .single()
     if (error || !data) return 'Could not submit your lab — please try again.'
-    setLabSubs(prev => ({ ...prev, [lab.id]: data as LabSubmission }))
+    const submission = data as LabSubmission
+    setLabSubs(prev => ({ ...prev, [lab.id]: submission }))
+
+    // Auto-review cohorts: ask the platform to check the submission now. The
+    // function decides (approve / send to manual); the student can't influence
+    // the outcome. Any failure here just leaves the lab in the manual queue.
+    if (autoReview) {
+      try {
+        await client.functions.invoke('lab-auto-review', { body: { submission_id: submission.id } })
+        const { data: fresh } = await client
+          .from('lab_submissions').select('*').eq('id', submission.id).maybeSingle()
+        if (fresh) {
+          const updated = fresh as LabSubmission
+          setLabSubs(prev => ({ ...prev, [lab.id]: updated }))
+          if (updated.status === 'approved') {
+            // Reflect any XP the auto-review awarded in the header count.
+            const { data: pr } = await client
+              .from('profiles').select('xp').eq('id', profile.id).maybeSingle()
+            const xp = (pr as { xp?: number } | null)?.xp
+            if (typeof xp === 'number') setProfile(prevP => prevP ? { ...prevP, xp } : prevP)
+          }
+        }
+      } catch {
+        /* auto-review unavailable — the lab stays submitted for manual review */
+      }
+    }
     return null
   }
 
