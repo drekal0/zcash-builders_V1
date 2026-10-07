@@ -62,6 +62,7 @@ export default function LessonPage({ params }: { params: Promise<PageParams> }) 
   /* ── Auth + profile ── */
   useEffect(() => {
     ;(async () => {
+      if (!supabase) { router.push('/'); return }
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/'); return }
 
@@ -107,7 +108,7 @@ export default function LessonPage({ params }: { params: Promise<PageParams> }) 
 
   /* ── Mark complete ── */
   const markComplete = async () => {
-    if (!profile || !lesson || marking || completed) return
+    if (!supabase || !profile || !lesson || marking || completed) return
     setMarking(true)
 
     const { data: { user } } = await supabase.auth.getUser()

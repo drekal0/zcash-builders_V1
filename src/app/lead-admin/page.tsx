@@ -56,6 +56,7 @@ export default function LeadAdminPage() {
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
+    if (!client) { setLoading(false); return }
     setLoading(true)
     const { data: { user } } = await client.auth.getUser()
     if (!user) { setLoading(false); return }
@@ -118,7 +119,7 @@ export default function LeadAdminPage() {
 
   // ── accept & enroll ────────────────────────────────────────────────────────
   async function acceptApp(app: Application) {
-    if (!cohort) return
+    if (!cohort || !client) return
     setActionLoading(app.id)
     const { data, error } = await client.rpc('accept_and_enroll', {
       p_application_id: app.id,
@@ -138,6 +139,7 @@ export default function LeadAdminPage() {
 
   // ── reject ─────────────────────────────────────────────────────────────────
   async function rejectApp(app: Application) {
+    if (!client) return
     setActionLoading(app.id)
     await client
       .from('applications')
@@ -152,7 +154,7 @@ export default function LeadAdminPage() {
   // ── save cohort settings ───────────────────────────────────────────────────
   async function saveSettings(e: React.FormEvent) {
     e.preventDefault()
-    if (!cohort) return
+    if (!cohort || !client) return
     setSettingsSaving(true)
     const { data, error } = await client.rpc('update_regional_cohort', {
       p_cohort_id:    cohort.id,
@@ -634,6 +636,7 @@ function NoCohortSetup({
   async function create(e: React.FormEvent) {
     e.preventDefault()
     if (!form.id || !form.name) { setError('Cohort ID and name are required'); return }
+    if (!client) { setError('Supabase is not configured'); return }
     setSaving(true)
     const { data, error: err } = await client.rpc('create_regional_cohort', {
       p_cohort_id:    form.id,
