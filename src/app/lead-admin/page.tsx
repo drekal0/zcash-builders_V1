@@ -46,7 +46,7 @@ export default function LeadAdminPage() {
     name: '', description: '', website: '',
     language: 'en', timezone: 'UTC',
     start_date: '', end_date: '',
-    max_students: 30, status: 'upcoming', is_public: true,
+    max_students: null as number | null, status: 'upcoming', is_public: true,
   })
   const [settingsSaving, setSettingsSaving] = useState(false)
 
@@ -90,7 +90,7 @@ export default function LeadAdminPage() {
         timezone:     cohortData.timezone      ?? 'UTC',
         start_date:   cohortData.start_date    ?? '',
         end_date:     cohortData.end_date      ?? '',
-        max_students: cohortData.max_students  ?? 30,
+        max_students: cohortData.max_students ?? null,
         status:       cohortData.status        ?? 'upcoming',
         is_public:    cohortData.is_public     ?? true,
       })
@@ -243,8 +243,8 @@ export default function LeadAdminPage() {
             {[
               { label: 'Enrolled', value: students.length, color: 'text-[#f4b728]' },
               { label: 'Pending', value: pendingApps.length, color: 'text-yellow-400' },
-              { label: 'Capacity', value: cohort.max_students, color: 'text-blue-400' },
-              { label: 'Spots Left', value: Math.max(0, cohort.max_students - students.length), color: 'text-green-400' },
+              { label: 'Capacity', value: cohort.max_students == null ? 'Unlimited' : cohort.max_students, color: 'text-blue-400' },
+              { label: 'Spots Left', value: cohort.max_students == null ? 'Unlimited' : Math.max(0, cohort.max_students - students.length), color: 'text-green-400' },
             ].map(s => (
               <div key={s.label} className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
@@ -489,8 +489,9 @@ export default function LeadAdminPage() {
                     type="number"
                     min={1}
                     max={200}
-                    value={settings.max_students}
-                    onChange={e => setSettings(s => ({ ...s, max_students: parseInt(e.target.value) || 30 }))}
+                    placeholder="Leave blank for unlimited"
+                    value={settings.max_students ?? ''}
+                    onChange={e => setSettings(s => ({ ...s, max_students: e.target.value === '' ? null : (parseInt(e.target.value) || null) }))}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f4b728]"
                   />
                 </Field>
@@ -628,7 +629,7 @@ function NoCohortSetup({
     id: '', name: '', region: 'west-africa' as Region,
     language: 'en', timezone: 'Africa/Lagos',
     description: '', website: '',
-    start_date: '', end_date: '', max_students: 30,
+    start_date: '', end_date: '', max_students: null as number | null,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -728,8 +729,8 @@ function NoCohortSetup({
         </div>
 
         <Field label="Max Students">
-          <input type="number" min={1} max={200} value={form.max_students}
-            onChange={e => setForm(f => ({ ...f, max_students: parseInt(e.target.value) || 30 }))}
+          <input type="number" min={1} max={200} placeholder="Leave blank for unlimited" value={form.max_students ?? ''}
+            onChange={e => setForm(f => ({ ...f, max_students: e.target.value === '' ? null : (parseInt(e.target.value) || null) }))}
             className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f4b728]"
           />
         </Field>

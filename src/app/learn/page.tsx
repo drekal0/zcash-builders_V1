@@ -400,7 +400,7 @@ export default function LearnPage() {
             Ready to build on Zcash?
           </div>
           <p className="text-body" style={{ maxWidth: '380px', margin: '0 auto 24px' }}>
-            Cohort 01 opens soon. Apply today — spots are limited to 30 developers.
+            Applications for Cohort 01 are open. Apply today — every qualified builder gets a seat.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <Link href="/apply" className="btn btn-primary">

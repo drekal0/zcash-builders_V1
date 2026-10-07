@@ -60,7 +60,7 @@ export interface Cohort {
   end_date?: string
   starts_at?: string   // legacy alias
   ends_at?: string     // legacy alias
-  max_students: number
+  max_students: number | null   // null = uncapped / unlimited seats
   status: 'upcoming' | 'active' | 'open' | 'completed'
   is_public?: boolean
 }

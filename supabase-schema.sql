@@ -10,16 +10,17 @@ create table public.cohorts (
   name        text not null,
   start_date  date,
   end_date    date,
-  max_students int default 20,
+  max_students int,                        -- null = uncapped / unlimited seats
   status      text default 'open'
                 check (status in ('open','active','completed')),
   discord_invite text,
   created_at  timestamptz default now()
 );
 
--- Seed first cohort
+-- Seed first cohort. Dates are set when the cohort is actually scheduled;
+-- max_students is null = uncapped (every qualified builder gets a seat).
 insert into public.cohorts (id, name, start_date, end_date, max_students, status)
-values ('cohort-01', 'Cohort 01', '2026-09-01', '2026-10-27', 20, 'open');
+values ('cohort-01', 'Cohort 01', null, null, null, 'open');
 
 -- ── PROFILES ─────────────────────────────────────────────────
 -- Extends auth.users — created automatically on signup via trigger

@@ -153,7 +153,7 @@ export default function ApplyPage() {
           </Link>
 
           <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '10px' }}>
-            Cohort 01 · 2026 · 20 spots
+            Cohort 01 · November 2026 · Open applications
           </div>
           <h1 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(28px,4vw,42px)', letterSpacing: '-0.025em', marginBottom: '10px' }}>
             Apply to Zcash <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>Builders</em>
