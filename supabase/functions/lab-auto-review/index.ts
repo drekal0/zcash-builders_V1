@@ -4,8 +4,8 @@
 // with { submission_id } right after submitting a lab. The function:
 //   1. identifies the caller from their JWT and confirms they own the submission;
 //   2. confirms the student's cohort is in 'auto' mode and the lab is still pending;
-//   3. performs a basic reachability check on the submission URL (a GET that
-//      follows redirects; GitHub/GitLab links must point at an actual repo);
+//   3. checks supported GitHub/GitLab repository links with bounded requests;
+//      unsafe or unsupported links stay submitted for mentor review;
 //   4. records the decision through the apply_lab_auto_review() RPC, which runs
 //      with the service role and is the only path allowed to approve + award XP.
 // Richer auto-grading (tests, rubrics) is a later phase.
@@ -15,6 +15,7 @@
 // (or the Supabase MCP deploy_edge_function tool).
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { checkUrl } from './security.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -24,58 +25,6 @@ const CORS = {
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
-
-// Fetch with a hard timeout so a slow URL can't hang the function.
-async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Promise<Response> {
-  const ctrl = new AbortController()
-  const t = setTimeout(() => ctrl.abort(), ms)
-  try {
-    return await fetch(url, { ...init, signal: ctrl.signal })
-  } finally {
-    clearTimeout(t)
-  }
-}
-
-// Basic validity / reachability check. Returns { passed, detail }.
-async function checkUrl(raw: string): Promise<{ passed: boolean; detail: string }> {
-  let u: URL
-  try {
-    u = new URL(raw)
-  } catch {
-    return { passed: false, detail: 'The submission is not a valid URL.' }
-  }
-  if (u.protocol !== 'https:' && u.protocol !== 'http:') {
-    return { passed: false, detail: 'The submission must be an http(s) URL.' }
-  }
-
-  // GitHub (and GitLab) repo URLs must point at an actual repository, not just a
-  // user/org. We verify by fetching the repo's public page — a public repo
-  // returns 200, a missing or private one returns 404. Using the page rather
-  // than the API avoids the 60-requests/hour unauthenticated API rate limit.
-  const isRepoHost = u.hostname === 'github.com' || u.hostname === 'www.github.com' || u.hostname === 'gitlab.com'
-  if (isRepoHost) {
-    const parts = u.pathname.split('/').filter(Boolean)
-    if (parts.length < 2) {
-      return { passed: false, detail: 'That link points to a profile, not a repository.' }
-    }
-  }
-
-  // Fetch the URL (follows redirects). Pass when it responds OK.
-  try {
-    const res = await fetchWithTimeout(
-      raw,
-      { method: 'GET', redirect: 'follow', headers: { 'User-Agent': 'zcash-builders-auto-review' } },
-      8000,
-    )
-    if (res.ok) return { passed: true, detail: `Auto-approved: the submission is reachable (HTTP ${res.status}).` }
-    if (res.status === 404 && isRepoHost) {
-      return { passed: false, detail: 'The repository was not found — is it private? A mentor will review it.' }
-    }
-    return { passed: false, detail: `The link responded with HTTP ${res.status}. A mentor will review it.` }
-  } catch {
-    return { passed: false, detail: 'The link did not resolve. A mentor will review it.' }
-  }
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
@@ -117,12 +66,19 @@ Deno.serve(async (req: Request) => {
 
   const check = await checkUrl(sub.submission_url ?? '')
 
+  // Unsafe or unsupported destinations stay in the existing submitted state,
+  // which is the manual mentor-review queue. Do not turn an inconclusive safety
+  // check into a revision request or an automatic approval.
+  if (check.decision === 'manual') {
+    return json({ ok: true, passed: false, manualReview: true, detail: check.detail })
+  }
+
   const { data: result, error: rpcErr } = await admin.rpc('apply_lab_auto_review', {
     p_submission_id: submissionId,
-    p_passed: check.passed,
+    p_passed: check.decision === 'approve',
     p_detail: check.detail,
   })
   if (rpcErr) return json({ ok: false, message: rpcErr.message }, 500)
 
-  return json({ ok: true, passed: check.passed, detail: check.detail, result })
+  return json({ ok: true, passed: check.decision === 'approve', detail: check.detail, result })
 })
