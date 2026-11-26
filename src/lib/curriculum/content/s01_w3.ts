@@ -103,6 +103,7 @@ export const M_s01_w3: Record<string, LessonContent> = {
     <tr><td>Nov 2025</td><td>NU6.1</td><td>Further funding changes (Week 4)</td></tr>
     <tr><td>3 Jun 2026</td><td>NU6.2</td><td>Orchard re-enabled on a corrected circuit</td></tr>
     <tr><td>28 Jul 2026</td><td>NU6.3 "Ironwood"</td><td>New Ironwood pool; Orchard pool sealed; version 6 transactions</td></tr>
+    <tr><td>6 Nov 2026</td><td>NU7</td><td>Block target spacing 75 s to 25 s; fee and issuance changes; version 4 transactions disallowed</td></tr>
   </tbody>
 </table>
 
@@ -110,11 +111,11 @@ export const M_s01_w3: Record<string, LessonContent> = {
 <p><strong>January: the ECC team leaves.</strong> On 7 January 2026 the entire Electric Coin Company team resigned after a governance dispute with Bootstrap, the nonprofit that owned ECC. The departing team said the board had changed their working conditions so far that resignation was forced; Bootstrap framed the matter as one of governance and nonprofit legal compliance. Nobody alleged criminal conduct, and the network was unaffected. The former team founded <strong>ZODL</strong> (Zcash Open Development Lab), led by Josh Swihart, which now maintains core protocol libraries and the Zodl wallet (formerly Zashi). Three former Bootstrap board members formed a separate nonprofit, Sovright.</p>
 <p><strong>May–June: the Orchard vulnerability.</strong> On 29 May 2026 researcher Taylor Hornby reported a soundness bug in the Orchard circuit implementation. An emergency soft fork disabled Orchard at height 3,363,426 on 2 June, and NU6.2 re-enabled it with a corrected circuit at height 3,364,600 on 3 June. There is no evidence the bug was exploited.</p>
 <p><strong>July: zcashd ends, Ironwood begins.</strong> The original node, <code>zcashd</code>, reached end-of-support and halted at height 3,417,100 on 18 July. Zebra, from the Zcash Foundation, is now the full node. Ten days later NU6.3 activated at height 3,428,143, creating the Ironwood pool and sealing Orchard.</p>
-<p><strong>Next: NU7.</strong> As of October 2026, NU7 is active on Testnet only. Its Mainnet activation height has not been set.</p>
+<p><strong>Latest: NU7.</strong> After running on Testnet since early October 2026, NU7 activated on Mainnet at height 3,543,405 on 6 November 2026. It cut block target spacing from 75 to 25 seconds (<a href="https://zips.z.cash/zip-0218">ZIP 218</a>) and is deployed by <a href="https://zips.z.cash/zip-0259">ZIP 259</a>; see the <a href="https://zips.z.cash/">ZIP index</a> for the full set.</p>
 <blockquote><p>Dating rule: if a guide tells you to run <code>zcashd</code>, calls Orchard the newest pool, or names ECC as the current core team, it predates 2026. Check every command in it against current documentation.</p></blockquote>
 
 <h2>Try it</h2>
-<p>Activation heights let you check dates yourself. Zcash's block target spacing has been 75 seconds since Blossom.</p>
+<p>Activation heights let you check dates yourself. Zcash's block target spacing was 75 seconds from Blossom until NU7, which cut it to 25 seconds on 6 November 2026. The heights below are all from 2026 before NU7, so the 75-second figure applies to them.</p>
 <ol>
   <li>NU6.2 activated at height 3,364,600 and NU6.3 at height 3,428,143. How many blocks apart are they?</li>
   <li>Multiply by 75 seconds and convert to days. Compare your answer with the calendar gap between 3 June and 28 July 2026.</li>

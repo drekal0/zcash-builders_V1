@@ -114,21 +114,21 @@ export const M_s01_w4: Record<string, LessonContent> = {
 </ul>
 <p>Both streams end at the third halving, roughly three years after NU6.1. A draft from September 2026, not yet numbered, proposes naming Zcash Open Development Lab (ZODL) as a Key-Holder Organization in place of Electric Coin Company.</p>
 
-<h2>What NU7 proposes</h2>
-<p>NU7 is not active on Mainnet and every ZIP below is a Draft. None changes the 80 / 8 / 12 split of the subsidy.</p>
+<h2>What NU7 changed</h2>
+<p>NU7 activated on Mainnet at height 3,543,405 on 6 November 2026; the ZIPs below took effect with it. None changes the 80 / 8 / 12 split of the subsidy.</p>
 <ul>
-<li><strong>ZIP 218</strong> cuts block target spacing from 75 to 25 seconds, so the subsidy per block falls to a third (52,083,333 zatoshis) and issuance per day stays essentially the same.</li>
+<li><strong>ZIP 218</strong> cut block target spacing from 75 to 25 seconds, so the subsidy per block fell to a third (52,083,333 zatoshis) and issuance per day stays essentially the same.</li>
 <li><strong>ZIP 214 Revision 3</strong> and <strong>ZIP 207 Revision 2</strong> re-time the existing streams so they still end at the third halving.</li>
 <li><strong>ZIP 2008</strong> moves the ZCG stream to a new receiving address, at the recipient's request.</li>
-<li><strong>ZIP 235</strong> removes 60% of each block's transaction fees from circulation; miners keep 40%. Today miners receive all fees.</li>
+<li><strong>ZIP 235</strong> removes 60% of each block's transaction fees from circulation; miners keep 40%. Before NU7 miners received all fees.</li>
 <li><strong>ZIP 237</strong> reissues the removed funds later through block subsidies, keeping the halving schedule and the 21 million cap.</li>
 </ul>
 <p>The <em>size</em> of the fee is a separate matter. ZIP 317's conventional fee is 5,000 zatoshis per logical action, and a cut to 1,000 is being rolled out as wallet and relay policy, not as a consensus change or part of NU7.</p>
 
 <h2>Try it</h2>
 <ol>
-<li>At 75 seconds per block, how many blocks are mined in a day? Multiply by the per-block amounts above to get the daily ZEC for miners, ZCG and the Coinholder-Controlled Fund.</li>
-<li>Repeat with NU7's proposed numbers: 25-second blocks and a 0.52083333 ZEC subsidy. What changed per block, and what changed per day?</li>
+<li>Before NU7, at 75 seconds per block, how many blocks were mined in a day? Multiply by the old per-block amounts (1.5625 ZEC subsidy) to get the daily ZEC for miners, ZCG and the Coinholder-Controlled Fund.</li>
+<li>Now repeat with NU7's live numbers: 25-second blocks and a 0.52083333 ZEC subsidy. What changed per block, and what changed per day?</li>
 <li>Read "Disbursement process" and "Veto process" in ZIP 1016. Write down two things that must happen before coinholders can vote on an application.</li>
 </ol>
 
@@ -246,7 +246,7 @@ export const M_s01_w4: Record<string, LessonContent> = {
 <li><code>zebra-state</code> — stores the chain and checks rules that depend on it, such as whether a nullifier has already been used.</li>
 <li><code>zebrad</code> — the node binary that wires these together.</li>
 </ul>
-<p>Operational facts worth remembering: Zebra's peer-to-peer port is 8233 on Mainnet and 18233 on Testnet; its JSON-RPC port is 8232 and 18232. It can expose <code>/healthy</code> and <code>/ready</code> HTTP endpoints so other services can wait until it has caught up. Each Zebra release stops running at a built-in end-of-support height, so a node has to be kept upgraded. As of October 2026 the stable line is 6.4.x, and 7.0.0-rc.0 is a release candidate for NU7 on Testnet.</p>
+<p>Operational facts worth remembering: Zebra's peer-to-peer port is 8233 on Mainnet and 18233 on Testnet; its JSON-RPC port is 8232 and 18232. It can expose <code>/healthy</code> and <code>/ready</code> HTTP endpoints so other services can wait until it has caught up. Each Zebra release stops running at a built-in end-of-support height, so a node has to be kept upgraded. The NU7 line is Zebra 7.x — 7.0.0 shipped for NU7, which activated on Mainnet on 6 November 2026 — so run a current 7.x release.</p>
 <blockquote>Zebra keeps a copy of the whole chain state, so it "isn't intended for lightweight applications like light wallets". That is the job of an indexer and the light client protocol — the next two lessons.</blockquote>
 
 <h2>Z3: the stack in one place</h2>
