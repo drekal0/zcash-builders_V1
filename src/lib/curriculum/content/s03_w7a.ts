@@ -46,7 +46,7 @@ export const M_s03_w7a: Record<string, LessonContent> = {
   <li><strong>A ZIP is drafted</strong> in the zips repo as a pull request, named <code>draft-&lt;author&gt;-&lt;topic&gt;</code> until an Editor assigns it a number. NU7's deployment is <a href="https://zips.z.cash/zip-0259">ZIP 259</a>.</li>
   <li><strong>Implementation.</strong> The change is written in at least one consensus node — today that means Zebra. NU7 shipped first as <code>zebrad</code> 7.0.0-rc.0.</li>
   <li><strong>Testnet activation.</strong> The upgrade activates on Testnet first so wallets and services can test. NU7 activated on Testnet at height 4,465,026 in October 2026.</li>
-  <li><strong>Mainnet activation</strong> at a fixed block height, once there is consensus. NU6.3 "Ironwood" activated on Mainnet at height 3,428,143 on 28 July 2026. NU7's Mainnet height was still to be decided as of October 2026.</li>
+  <li><strong>Mainnet activation</strong> at a fixed block height, once there is consensus. NU6.3 "Ironwood" activated on Mainnet at height 3,428,143 on 28 July 2026, and NU7 activated on Mainnet at height 3,543,405 on 6 November 2026.</li>
 </ol>
 <blockquote>Not every change needs a ZIP. A small patch to one program goes straight to that project's issue tracker. ZIPs are for things that must be standardised across implementations, or that change a shared process.</blockquote>
 
@@ -201,7 +201,7 @@ ready_max_blocks_behind = 2</code></pre>
   <thead><tr><th>Network</th><th>First sync</th><th>Real funds</th><th>Proves</th></tr></thead>
   <tbody>
     <tr><td>Mainnet</td><td>24–72 h, ~300 GB</td><td>Yes</td><td>You can operate real infrastructure</td></tr>
-    <tr><td>Testnet</td><td>2–12 h, ~10 GB</td><td>No (test ZEC)</td><td>You can run against a live public network, get testnet coins from a faucet, and test real transactions. NU7 is live here, so Testnet has 25-second blocks while Mainnet has 75.</td></tr>
+    <tr><td>Testnet</td><td>2–12 h, ~10 GB</td><td>No (test ZEC)</td><td>You can run against a live public network, get testnet coins from a faucet, and test real transactions. NU7 is live on both Testnet and Mainnet (since 6 November 2026), so blocks target 25 seconds on each.</td></tr>
     <tr><td>Regtest</td><td>Seconds, no peers</td><td>No</td><td>The whole stack starts locally in seconds; you mine blocks on demand. Best for development and for this week's lab.</td></tr>
   </tbody>
 </table>

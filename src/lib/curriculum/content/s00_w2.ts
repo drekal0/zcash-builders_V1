@@ -40,41 +40,41 @@ for (let nonce = 0; ; nonce++) {
 <p>The specification's own summary is that Zcash "attempted to address the problem of mining centralization by use of the Equihash memory-hard proof-of-work algorithm". Specialised Equihash hardware (ASICs) was built anyway, and ZecHub's mining guide describes ASICs as dominating the network in 2026.</p>
 
 <h2>Difficulty adjustment</h2>
-<p>The <strong>block target spacing</strong> is the average time the network aims for between blocks. On Zcash Mainnet it is <strong>75 seconds as of October 2026</strong>; it was 150 seconds at launch and was halved by the Blossom upgrade in December 2019. If miners add hardware, blocks arrive too fast, so the target has to move. Bitcoin retunes every 2,016 blocks. Zcash retunes <strong>after every block</strong>, with an algorithm based on DigiShield:</p>
+<p>The <strong>block target spacing</strong> is the average time the network aims for between blocks. On Zcash Mainnet it is <strong>25 seconds</strong> since the NU7 upgrade activated at height 3,543,405 on 6 November 2026 (<a href="https://zips.z.cash/zip-0218">ZIP 218</a>); it was 150 seconds at launch, cut to 75 by the Blossom upgrade in December 2019, and cut to 25 by NU7. If miners add hardware, blocks arrive too fast, so the target has to move. Bitcoin retunes every 2,016 blocks. Zcash retunes <strong>after every block</strong>, with an algorithm based on DigiShield:</p>
 <ol>
-  <li>Take the mean target of the previous 17 blocks.</li>
+  <li>Take the mean target of the previous 102 blocks (17 before NU7).</li>
   <li>Measure how long those blocks really took, using the median of 11 block timestamps at each end, because a single miner-chosen timestamp cannot be trusted.</li>
-  <li>Compare that with the expected 17 × 75 = 1,275 seconds, and apply only a quarter of the difference (damping).</li>
+  <li>Compare that with the expected 102 × 25 = 2,550 seconds, and apply only a quarter of the difference (damping).</li>
   <li>Clamp the result: the new target can be at most about 16% lower (harder) or 32% higher (easier) than that mean.</li>
 </ol>
-<blockquote>The NU7 upgrade is planned to cut the Mainnet block target spacing to 25 seconds and widen the averaging window from 17 to 102 blocks (ZIP 218). As of early October 2026 NU7 is live on Testnet only. ZIP 259 says the Mainnet activation height is to be set on 20 October 2026, and the timeline posted on the Zcash Community Forum targets 5 November 2026. Check ZIP 259 before you hardcode a block time.</blockquote>
+<blockquote>NU7 activated on Mainnet at height 3,543,405 on 6 November 2026 (<a href="https://zips.z.cash/zip-0259">ZIP 259</a>), cutting block target spacing from 75 to 25 seconds and widening the averaging window from 17 to 102 blocks (<a href="https://zips.z.cash/zip-0218">ZIP 218</a>). Values like these change at upgrades, so read them from the current ZIP rather than hardcoding a block time.</blockquote>
 
 <h2>The block reward</h2>
-<p>Each block creates new ZEC, called the <strong>block subsidy</strong>. Since the November 2024 halving it is 1.5625 ZEC, and consensus rules fix how it is divided:</p>
+<p>Each block creates new ZEC, called the <strong>block subsidy</strong>. From the November 2024 halving until NU7 it was 1.5625 ZEC; since NU7 activated on 6 November 2026 it is a third of that, about 0.5208 ZEC, because NU7 cut the per-block subsidy by three and tripled the halving interval so issuance per unit of time is unchanged. Consensus rules fix how each block's subsidy is divided:</p>
 <table>
-  <thead><tr><th>Recipient</th><th>Share</th><th>ZEC per block</th></tr></thead>
+  <thead><tr><th>Recipient</th><th>Share</th><th>ZEC per block (since NU7)</th></tr></thead>
   <tbody>
-    <tr><td>Miner</td><td>80%</td><td>1.25</td></tr>
-    <tr><td>Zcash Community Grants</td><td>8%</td><td>0.125</td></tr>
-    <tr><td>Coinholder-Controlled Fund</td><td>12%</td><td>0.1875</td></tr>
+    <tr><td>Miner</td><td>80%</td><td>≈0.4167</td></tr>
+    <tr><td>Zcash Community Grants</td><td>8%</td><td>≈0.0417</td></tr>
+    <tr><td>Coinholder-Controlled Fund</td><td>12%</td><td>0.0625</td></tr>
   </tbody>
 </table>
 <p>The two non-miner shares are <strong>funding streams</strong> (ZIP 214, ZIP 1016). A block whose coinbase transaction does not pay them is invalid. The miner also collects the fees of the transactions in the block.</p>
-<p>The subsidy started at a maximum of 12.5 ZEC per 150-second block. Blossom halved both the spacing and the per-block amount, and halvings at heights 1,046,400 (November 2020) and 2,726,400 (November 2024) brought it to 1.5625 ZEC. Halvings are 1,680,000 blocks apart, about four years at 75 seconds, so under the rules in force in October 2026 the next is at height 4,406,400. NU7 would divide the per-block subsidy by three and triple the remaining interval, keeping issuance per unit of time the same. Total supply is capped at 21 million ZEC.</p>
+<p>The subsidy started at a maximum of 12.5 ZEC per 150-second block. Blossom halved both the spacing and the per-block amount, and halvings at heights 1,046,400 (November 2020) and 2,726,400 (November 2024) brought it to 1.5625 ZEC. Halvings were 1,680,000 blocks apart, about four years at 75 seconds. NU7 (active since height 3,543,405) divides the per-block subsidy by three and triples the halving interval to 5,040,000 blocks, so issuance per unit of time is unchanged; the pre-NU7 schedule put the next halving near height 4,406,400, but because NU7 rescales the interval you should check the current spec for the exact height rather than hardcoding one. Total supply is capped at 21 million ZEC.</p>
 
 <h2>Try it</h2>
 <ol>
   <li>Save the toy miner as <code>toy-miner.mjs</code> and run <code>node toy-miner.mjs</code>. You should see nonce 5544 after 5,545 attempts and a hash starting <code>000061fc</code>. That is far fewer than the 65,536 average, which is the lottery at work.</li>
   <li>Set <code>bits</code> to 12, then 20, and record the attempts each time. The 20-bit run needs about three million attempts and can take tens of seconds. What does one extra bit do to the expected work?</li>
-  <li>On paper: at 75 seconds per block, how many blocks are mined per day, how much ZEC is issued per day, and how much of it goes to miners? (Check: 1,152 blocks, 1,800 ZEC, 1,440 ZEC.)</li>
+  <li>On paper: at 25 seconds per block, how many blocks are mined per day, how much ZEC is issued per day, and how much of it goes to miners? (Check: 3,456 blocks, 1,800 ZEC, 1,440 ZEC — the daily totals match the old 75-second era because the per-block subsidy fell by the same factor of three.)</li>
 </ol>
 
 <h2>Key takeaways</h2>
 <ul>
   <li>Mining is a search that is costly to perform and cheap to verify; that cost is what protects history.</li>
   <li>A Zcash block needs a valid Equihash solution (n = 200, k = 9) and a header hash at or below the target.</li>
-  <li>Zcash adjusts difficulty after every block, aiming for 75-second spacing on Mainnet as of October 2026; NU7 plans 25 seconds.</li>
-  <li>The 1.5625 ZEC block subsidy is split 80% miner, 8% Zcash Community Grants, 12% Coinholder-Controlled Fund, enforced by consensus.</li>
+  <li>Zcash adjusts difficulty after every block, aiming for 25-second spacing on Mainnet since NU7 activated on 6 November 2026 (75 seconds before that).</li>
+  <li>The block subsidy (about 0.5208 ZEC since NU7; 1.5625 ZEC before) is split 80% miner, 8% Zcash Community Grants, 12% Coinholder-Controlled Fund, enforced by consensus.</li>
 </ul>
 
 <h2>Sources &amp; further reading</h2>
@@ -181,7 +181,7 @@ for (let nonce = 0; ; nonce++) {
 <p>The Zcash specifics, as of October 2026:</p>
 <ul>
   <li><strong>Fork choice.</strong> A node sums the work of every block in each valid chain and treats the chain with the greatest total work as best. Work is calculated from each block's target, so the best chain is the heaviest, which is not always the one with the most blocks. On a tie, the node prefers the block it received first.</li>
-  <li><strong>Reorg depth.</strong> Zebra, the full node you will run later, keeps recent blocks in a non-finalised state and will not roll back further than 1,000 blocks. This is a local policy of the node software, not a consensus rule. At 75-second spacing it covers about 20.8 hours.</li>
+  <li><strong>Reorg depth.</strong> Zebra, the full node you will run later, keeps recent blocks in a non-finalised state and will not roll back further than 1,000 blocks. This is a local policy of the node software, not a consensus rule. At the 25-second spacing in force since NU7 it covers about 6.9 hours (1,000 × 25 s).</li>
   <li><strong>Wallet policy.</strong> ZIP 315 (a draft of wallet best practices) recommends 10 confirmations before spending funds received from someone else, and 3 for funds your own wallet created, such as change. The <code>librustzcash</code> wallet libraries use the same numbers as their default.</li>
 </ul>
 <blockquote>ZIP 203 states it directly: user interfaces and services "must never rely on zero-confirmation transactions in Zcash". A transaction your node has merely seen is a promise. It is not yet a payment.</blockquote>
@@ -193,7 +193,7 @@ for (let nonce = 0; ; nonce++) {
 <h2>Try it</h2>
 <ol>
   <li>Your node sees three valid chain tips above the same parent. Tip A has five blocks, each with work 100. Tip B has four blocks with work 100, 100, 160 and 160. Tip C has the same total work as B but arrived a second later. Which does the node follow, and why?</li>
-  <li>Calculate the wait for 3 and for 10 confirmations at 75 seconds per block. Repeat for 25 seconds, the spacing planned for NU7. ZIP 218 says it "does not argue for clients reducing confirmation counts": why might that be?</li>
+  <li>Calculate the wait for 3 and for 10 confirmations at 25 seconds per block — Mainnet's spacing since NU7. For comparison, repeat for the old 75-second spacing. ZIP 218 says it "does not argue for clients reducing confirmation counts": why might that be?</li>
   <li>Write two sentences for a merchant explaining why a payment seen on the network but not yet in a block must not release the goods.</li>
 </ol>
 <p>Answers to check against: B (total work 520 beats 500, and B was received before C); 3 min 45 s and 12 min 30 s at 75 seconds; 1 min 15 s and 4 min 10 s at 25 seconds.</p>
@@ -329,7 +329,7 @@ fee       0.00010000 ZEC   inputs minus outputs; it is never written down</code>
 <p>Paying extra buys little. Zebra's block templates follow ZIP 317's recommended algorithm, which picks transactions at random, weighted by fee relative to the conventional fee, with a cap on that weight.</p>
 
 <h2>Expiry: ZIP 203</h2>
-<p>Every Zcash transaction carries an <code>nExpiryHeight</code>. It cannot be mined in a block above that height, and nodes drop it from their mempools once the chain gets there. The default is 40 blocks after the current height, about 50 minutes at 75-second spacing. A value of 0 means no expiry.</p>
+<p>Every Zcash transaction carries an <code>nExpiryHeight</code>. It cannot be mined in a block above that height, and nodes drop it from their mempools once the chain gets there. The default delta is 40 blocks after the current height — about 17 minutes at NU7's 25-second spacing, though some NU7 wallets raise the default to 120 blocks (~50 minutes) to keep the old window. A value of 0 means no expiry.</p>
 <p>So a Zcash transaction does not stay pending indefinitely. Once it expires, the funds are spendable again and the wallet must build and send a new transaction.</p>
 
 <h2>Try it</h2>

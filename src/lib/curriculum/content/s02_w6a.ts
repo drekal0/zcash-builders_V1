@@ -59,7 +59,7 @@ export const M_s02_w6a: Record<string, LessonContent> = {
 <li><strong>paid</strong>: every counted note has at least <em>N</em> confirmations. Only now release the goods.</li>
 <li><strong>underpaid</strong>, <strong>overpaid</strong>, <strong>expired</strong>: the exceptions, each with a written rule.</li>
 </ol>
-<p>For <em>N</em>, ZIP 315 (a Draft) recommends 10 confirmations before treating funds from another party as spendable, and Zallet uses the same default for untrusted outputs. Ten blocks is about 12.5 minutes at Mainnet's 75-second target spacing. NU7 is planned to cut the spacing to 25 seconds and is already active on Testnet, so store the threshold in blocks and compute any time you display from the network you are on.</p>
+<p>For <em>N</em>, ZIP 315 (a Draft) recommends 10 confirmations before treating funds from another party as spendable, and Zallet uses the same default for untrusted outputs. Ten blocks is about 4 minutes at Mainnet's 25-second target spacing since NU7 (about 12.5 minutes before the 6 November 2026 upgrade), so store the threshold in blocks and compute any time you display from the network you are on.</p>
 <p>Three details that catch people out:</p>
 <ul>
 <li><strong>Sum, do not compare one note.</strong> A customer may pay in two transactions. Add up <code>valueZat</code> for the address.</li>
@@ -312,7 +312,7 @@ function textMemoForUri(text: string): string {
 <p>Both Zallet and Zebra return JSON-RPC error objects with a numeric <code>code</code> and a <code>message</code>, using Bitcoin-style codes inherited from zcashd (<code>-5</code> is an invalid address or key, <code>-8</code> an invalid parameter). Branch on the code, log the message, and avoid parsing message text, which can change between beta releases.</p>
 
 <h2>Expiry, stale anchors and reorgs</h2>
-<p><strong>Expiry.</strong> Every transaction carries an expiry height (ZIP 203). If it has not been mined by that height it is dropped from mempools and can never be mined. The default is 40 blocks after the current height, about 50 minutes at 75-second blocks. Expiry is useful: it is the definite point at which a stuck payment is dead and can be rebuilt.</p>
+<p><strong>Expiry.</strong> Every transaction carries an expiry height (ZIP 203). If it has not been mined by that height it is dropped from mempools and can never be mined. The default is 40 blocks after the current height, about 17 minutes at NU7's 25-second blocks (wallets may raise the default to 120 blocks to keep the old ~50-minute window). Expiry is useful: it is the definite point at which a stuck payment is dead and can be rebuilt.</p>
 <p><strong>Stale anchors.</strong> A shielded spend proves its note exists relative to an <strong>anchor</strong>, a past root of the note commitment tree. ZIP 315 warns that "if the chain rolls back past the block at which the anchor is chosen, then the anchor and the transaction will be invalidated". The wallet picks anchors for you, but a transaction caught by a reorg must be rebuilt, not resubmitted.</p>
 <p><strong>Reorgs.</strong> A block your payment was in can be replaced. A payment you saw with 1 confirmation can return to 0, or vanish if it conflicted with another spend. So wait for a confirmation threshold, and re-read <code>confirmations</code> on each poll instead of counting upwards from the first sighting.</p>
 
@@ -389,10 +389,10 @@ docker compose --env-file .env.testnet up -d</code></pre>
 <p>You get TAZ from a <strong>faucet</strong>, a community-run service that sends small amounts on request. Faucets come and go, so check before relying on one. As of 7 October 2026, <a href="https://fauzec.com">fauzec.com</a> was live and stated that it sends 1 TAZ per address every 24 hours to Unified or Sapling addresses. ZecHub's faucet page also lists a second Testnet faucet. If one is down, ask in the programme's community channel: another learner can send you TAZ in seconds.</p>
 <blockquote>Never reuse a Mainnet seed phrase on Testnet or regtest, and never paste a Mainnet seed into a test tool. ZIP 326 assumes that a secure wallet "strictly segregates key material between Testnet and Mainnet". Generate throwaway keys for every test environment.</blockquote>
 
-<h2>Testnet is ahead of Mainnet right now</h2>
-<p>Network upgrades activate on Testnet first. NU7 activated on Testnet at height 4,465,026 in early October 2026. It has no Mainnet activation height yet. Until it does, the two networks behave differently in ways that matter to a payment application:</p>
+<h2>Networks can diverge during an upgrade window</h2>
+<p>Network upgrades activate on Testnet first. NU7 activated on Testnet at height 4,465,026 in early October 2026, then on Mainnet at height 3,543,405 on 6 November 2026. For the weeks in between, the two networks behaved differently in ways that matter to a payment application — the same skew you will meet at the next upgrade. The table below captures that window; since 6 November, Mainnet matches the NU7 column too:</p>
 <table>
-<thead><tr><th></th><th>Mainnet (October 2026)</th><th>Testnet (after NU7)</th></tr></thead>
+<thead><tr><th></th><th>Mainnet before NU7</th><th>NU7 (Testnet then, both now)</th></tr></thead>
 <tbody>
 <tr><td>Block target spacing</td><td>75 seconds</td><td>25 seconds (ZIP 218)</td></tr>
 <tr><td>10 confirmations takes about</td><td>12.5 minutes</td><td>A little over 4 minutes</td></tr>
@@ -402,8 +402,8 @@ docker compose --env-file .env.testnet up -d</code></pre>
 <tr><td>Zebra version needed</td><td>Current stable 6.x release</td><td>7.0.0-rc.0 or later; from NU7 activation, Testnet nodes disconnect Zebra 6.x peers</td></tr>
 </tbody>
 </table>
-<p>Three practical consequences. First, if your Z3 checkout pins an older Zebra image, a Testnet node will not follow the chain past NU7: override the pin with <code>Z3_ZEBRA_IMAGE</code>, and check that the Zallet and Zaino versions you run are compatible with that Zebra release before you rely on them. Second, never hardcode "one block is 75 seconds" or a fee constant. Keep thresholds in blocks, ask the node for the fee, and make the network an explicit setting in your own configuration. Third, Testnet block times are irregular: it has a rule that allows a minimum-difficulty block when more than 450 seconds pass without one, so expect bursts and gaps that Mainnet does not have.</p>
-<p>The reverse also holds. A timing test that passes on Testnet today tells you how your app will behave on Mainnet after NU7, not how it behaves on Mainnet now.</p>
+<p>Three practical consequences. First, if a Z3 checkout pins an older Zebra image, the node will not follow the chain past an upgrade: override the pin with <code>Z3_ZEBRA_IMAGE</code>, and check that the Zallet and Zaino versions you run are compatible with that Zebra release before you rely on them. Second, never hardcode "one block is 25 seconds" (or 75) or a fee constant. Keep thresholds in blocks, ask the node for the fee, and make the network an explicit setting in your own configuration. Third, Testnet block times are irregular: it has a rule that allows a minimum-difficulty block when more than 450 seconds pass without one, so expect bursts and gaps that Mainnet does not have.</p>
+<p>The same gap reopens at every future upgrade: during the window, a timing test that passes on Testnet tells you how your app will behave on Mainnet after the upgrade, not how it behaves on Mainnet before it.</p>
 
 <h2>Try it</h2>
 <p>Write a short script (shell, Python or TypeScript) against your regtest stack that: creates an invoice address with <code>z_getaddressforaccount</code>; pays it with <code>z_sendmany</code>; then mines one block at a time with <code>generate</code>, printing the <code>confirmations</code> value from <code>z_listunspent</code> (with <code>minconf</code> 0) after each block until it reaches 10. Keep the script. It is the skeleton of the automated test for your lab submission.</p>
@@ -412,7 +412,7 @@ docker compose --env-file .env.testnet up -d</code></pre>
 <ul>
 <li>Regtest gives you control of block production, so it is where confirmation, expiry, restart and reorg logic gets tested.</li>
 <li>Testnet adds real peers, timing and sync, with valueless TAZ from community faucets.</li>
-<li>As of October 2026, Testnet runs NU7 and Mainnet does not: 25-second versus 75-second blocks, different standard fees, and a different required Zebra version.</li>
+<li>Both Testnet and Mainnet have run NU7 since 6 November 2026 (25-second blocks, NU7 fees, a Zebra 7.x node); during an upgrade window the networks differ, so write for the network you are on.</li>
 <li>Write time and fee logic in terms of blocks and node-reported values so it survives the difference.</li>
 <li>Keep test keys and Mainnet keys completely separate.</li>
 </ul>
@@ -512,7 +512,7 @@ docker compose --env-file .env.testnet up -d</code></pre>
 <p>You saw in the sync lesson that a light wallet downloads compact blocks. ZIP 218 puts a size on them: a compact Orchard-protocol action (Orchard or Ironwood) is <strong>148 bytes</strong>; a compact Sapling output is 116 bytes and a Sapling spend 32 bytes; a compact block header is about 90 bytes. A wallet downloads these for every shielded transaction on the network, not only its own.</p>
 <p>ZIP 218 also works out the <em>worst case</em>, in which an attacker fills every block with shielded outputs:</p>
 <table>
-<thead><tr><th></th><th>Today (75 s blocks, no per-pool limits)</th><th>ZIP 218 (25 s blocks, action limits)</th></tr></thead>
+<thead><tr><th></th><th>Before NU7 (75 s blocks, no per-pool limits)</th><th>NU7 / ZIP 218 (25 s blocks, action limits)</th></tr></thead>
 <tbody>
 <tr><td>Blocks per day</td><td>1,152</td><td>3,456</td></tr>
 <tr><td>Maximum Orchard-protocol actions per block</td><td>About 617 (limited by block size)</td><td>330</td></tr>
@@ -521,7 +521,7 @@ docker compose --env-file .env.testnet up -d</code></pre>
 <tr><td>Compact block headers per day</td><td>About 0.10 MB</td><td>0.31 MB</td></tr>
 </tbody>
 </table>
-<p>The right-hand column rests on consensus rules planned for NU7: at most 330 Orchard actions, 330 Ironwood actions and 300 Sapling inputs plus outputs per block, within a shared budget of 330. They are active on Testnet, not yet on Mainnet. These are ceilings, not typical usage: the ZIP notes that "regular user flows impose far lower costs". The cost that rises for everyone is headers, by roughly 0.2 MB per day.</p>
+<p>The right-hand column rests on consensus rules planned for NU7: at most 330 Orchard actions, 330 Ironwood actions and 300 Sapling inputs plus outputs per block, within a shared budget of 330. They have been active on both networks since 6 November 2026. These are ceilings, not typical usage: the ZIP notes that "regular user flows impose far lower costs". The cost that rises for everyone is headers, by roughly 0.2 MB per day.</p>
 
 <h2>Scan less</h2>
 <ul>
@@ -626,7 +626,7 @@ docker compose --env-file .env.mainnet up -d</code></pre>
 </ul>
 
 <h2>Upgrades are part of the job</h2>
-<p>A Zcash node is not software you install once. According to Zebra's release process, each release is supported for about 12 weeks, and "when the Zcash chain reaches this end of support height, <code>zebrad</code> will shut down and the binary will refuse to start". Network upgrades add a second deadline: a node not upgraded before an activation height cannot follow the chain afterwards. NU7 is live on Testnet and had no Mainnet activation height as of early October 2026, so expect a required upgrade once one is announced.</p>
+<p>A Zcash node is not software you install once. According to Zebra's release process, each release is supported for about 12 weeks, and "when the Zcash chain reaches this end of support height, <code>zebrad</code> will shut down and the binary will refuse to start". Network upgrades add a second deadline: a node not upgraded before an activation height cannot follow the chain afterwards. NU7 activated on Mainnet at height 3,543,405 on 6 November 2026 (it ran on Testnet from early October), so a node must run a compatible Zebra 7.x release to follow the chain past that height.</p>
 <p>Z3 pins image versions so that nothing changes by surprise, which also means a pin can be stale. Before your first Mainnet start, compare the Zebra and Zallet versions pinned in your Z3 checkout with each project's releases page; a Zebra release more than about 12 weeks old is at or near its end of support. The routine after that is deliberate:</p>
 <ol>
 <li>Read the release notes for Zebra, Zallet and Z3. Look for database format changes (Zebra 7.0.0-rc.0, for example, changes the state format so that downgrading needs a full re-sync) and, for Zallet, anything that requires recreating the wallet.</li>

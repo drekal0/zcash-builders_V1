@@ -32,7 +32,7 @@ export const M_s00_w1: Record<string, LessonContent> = {
 
 <h2>Who keeps the chain</h2>
 <p>A <strong>full node</strong> downloads every block, checks every rule itself, and passes valid blocks and transactions on to its peers. It does not take another node's word for anything. The full node this programme teaches is <strong>Zebra</strong> (<code>zebrad</code>), maintained by the Zcash Foundation.</p>
-<p><strong>Miners</strong> assemble new blocks and compete to solve a computational puzzle called <strong>proof of work</strong>. As of October 2026, Zcash Mainnet is a proof-of-work chain that targets one block every 75 seconds. When nodes see competing chains, they follow the valid chain with the greatest total work. Rewriting an old block therefore means redoing its work and the work of every block after it, faster than the rest of the network extends the honest chain. Week 2 covers mining and consensus properly.</p>
+<p><strong>Miners</strong> assemble new blocks and compete to solve a computational puzzle called <strong>proof of work</strong>. As of November 2026, Zcash Mainnet is a proof-of-work chain that targets one block every 25 seconds (it was 75 seconds until the NU7 upgrade activated on 6 November 2026). When nodes see competing chains, they follow the valid chain with the greatest total work. Rewriting an old block therefore means redoing its work and the work of every block after it, faster than the rest of the network extends the honest chain. Week 2 covers mining and consensus properly.</p>
 
 <h2>What you get, and what you do not</h2>
 <ul>
@@ -58,7 +58,7 @@ export const M_s00_w1: Record<string, LessonContent> = {
   <li>A blockchain is a shared, append-only ledger that every full node verifies independently.</li>
   <li>Each block header contains the hash of the previous header, so changing old data breaks every later link.</li>
   <li>Miners add blocks by proof of work, and nodes follow the valid chain with the most total work.</li>
-  <li>Zcash Mainnet targets a block every 75 seconds (October 2026) and limits blocks to 2,000,000 bytes.</li>
+  <li>Zcash Mainnet targets a block every 25 seconds (since NU7 activated on 6 November 2026; 75 seconds before) and limits blocks to 2,000,000 bytes.</li>
   <li>Blockchain data is public by default; Zcash adds shielded pools that encrypt transaction details.</li>
 </ul>
 
@@ -95,7 +95,7 @@ export const M_s00_w1: Record<string, LessonContent> = {
     <tr><td>Who can write?</td><td>Whoever the operator authorises</td><td>Anyone whose transaction follows the rules and pays the fee</td></tr>
     <tr><td>Who can rewrite history?</td><td>The operator</td><td>Nobody, short of out-working the whole network</td></tr>
     <tr><td>Operations</td><td>Create, read, update, delete</td><td>Append and read</td></tr>
-    <tr><td>Capacity</td><td>Limited by the hardware you buy</td><td>Limited by protocol rules: on Zcash, at most 2,000,000 bytes per block, with a block targeted every 75 seconds</td></tr>
+    <tr><td>Capacity</td><td>Limited by the hardware you buy</td><td>Limited by protocol rules: on Zcash, at most 2,000,000 bytes per block, with a block targeted every 25 seconds (since NU7)</td></tr>
     <tr><td>Time to a settled write</td><td>Milliseconds</td><td>Minutes: you wait for your transaction's block, then for more blocks on top of it</td></tr>
     <tr><td>Storage</td><td>One copy plus backups</td><td>Every full node keeps the history: roughly 300 GB for Zcash Mainnet as of October 2026</td></tr>
     <tr><td>Who can read?</td><td>Whoever the operator allows</td><td>Everyone, unless the protocol encrypts the data</td></tr>
